@@ -497,8 +497,29 @@ body::before{
 
 
 /* Quran Reader Styles */
-.dark-mode #quranPageImg {
-  filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
+#quranImgContainer {
+  background-color: #f8f4ec;
+}
+#quranPageImg {
+  background: #fffff8;
+  display: block;
+}
+/* In dark mode: add contrast boost + shadow to separate page from dark UI */
+body:not(.light-mode) #quranPageImg {
+  filter: contrast(1.12) brightness(0.97);
+  box-shadow: 0 0 30px rgba(0,0,0,.6);
+}
+.quran-panel-overlay {
+  display: none;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--s1);
+  border-radius: 16px 16px 0 0;
+  z-index: 15000;
+  max-height: 75%;
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.3);
 }
 
 .quran-bottom-nav .nav-item {
@@ -584,8 +605,8 @@ body.light-mode {
   --s2: #ede7d9;
   --s3: #d9d0be;
   --s4: #c0b49e;
-  --bdr: rgba(0,0,0,.10);
-  --bdr2: rgba(0,0,0,.15);
+  --bdr: rgba(0,0,0,.16);
+  --bdr2: rgba(0,0,0,.24);
 
   /* نصوص واضحة تماماً في الوضع الفاتح */
   --t1: #111008;
@@ -611,18 +632,76 @@ body.light-mode {
   --shg: 0 0 20px rgba(184,134,11,.1);
 }
 
-body.light-mode .tabs {
-  background: rgba(237,231,217,.9);
-  border-color: rgba(0,0,0,.08);
-}
-body.light-mode .task {
-  background: rgba(255,255,255,.8);
-}
 body.light-mode .login-box {
   background: rgba(255,255,255,.8);
   border-top-color: rgba(184,134,11,.35);
 }
 body.light-mode body::before { opacity: .6; }
+
+/* ── light mode: fix elements with hardcoded dark/transparent backgrounds ── */
+body.light-mode .hdr-cont {
+  background: rgba(255,255,255,.7);
+  border-color: rgba(0,0,0,.1);
+}
+body.light-mode .chip {
+  background: var(--s2);
+  border-color: rgba(0,0,0,.14);
+  color: var(--t2);
+}
+body.light-mode .chip-gold {
+  background: var(--golddim);
+  border-color: rgba(184,134,11,.3);
+  color: var(--gold);
+}
+body.light-mode .chip-theme {
+  border-color: rgba(184,134,11,.35);
+}
+body.light-mode .task {
+  background: #fff;
+  border-color: rgba(0,0,0,.12);
+}
+body.light-mode .tabs {
+  background: rgba(237,231,217,.95);
+  border-color: rgba(0,0,0,.1);
+}
+body.light-mode .tab.on {
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+body.light-mode .wird-bar { background: rgba(0,0,0,.1); }
+body.light-mode .wird-item {
+  background: var(--s2);
+  border-color: rgba(0,0,0,.1);
+}
+body.light-mode .wird-item:hover { background: var(--s3); }
+body.light-mode .t-note-show { background: rgba(0,0,0,.05); }
+body.light-mode .tf { background: rgba(0,0,0,.07); color: var(--t2); }
+body.light-mode .ts { background: rgba(100,70,200,.09); color: #6050b8; }
+body.light-mode .field-inp {
+  background: #fff;
+  border-color: rgba(0,0,0,.16);
+  color: var(--t1);
+}
+body.light-mode .g-btn {
+  background: var(--s2);
+  border-color: rgba(0,0,0,.14);
+  color: var(--t2);
+}
+body.light-mode .login-tabs { background: rgba(0,0,0,.07); }
+body.light-mode .ltab.on { background: var(--s3); }
+body.light-mode .pomo-track { stroke: rgba(0,0,0,.1); }
+body.light-mode .act-btn { background: var(--s3); border-color: rgba(0,0,0,.12); }
+body.light-mode .week-tbl td, body.light-mode .week-tbl th {
+  border-color: rgba(0,0,0,.12);
+}
+body.light-mode .week-cell-inp,
+body.light-mode .week-time-inp {
+  background: #fff;
+  color: var(--t1);
+  border-color: rgba(0,0,0,.16);
+}
+body.light-mode .quran-bottom-nav .nav-item { color: var(--t2); }
+body.light-mode .quran-bottom-nav .nav-item.active { color: var(--gold); }
+body.light-mode .quran-panel-overlay { box-shadow: 0 -4px 24px rgba(0,0,0,.15); }
 
 .chip-theme {
   cursor: pointer;

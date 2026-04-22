@@ -125,7 +125,11 @@
       <div class="add-area">
         <div class="add-area-ttl">➕ إضافة مهمة</div>
         <input class="add-inp" id="addName" placeholder="اسم المهمة..."/>
-        <input class="add-inp" id="addTime" placeholder="الوقت (مثال: 3:00 م) — اختياري" style="margin-bottom:10px"/>
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+          <input class="add-inp" id="addTimeStart" placeholder="من (٣:٠٠ م)" style="flex:1;margin-bottom:0"/>
+          <span style="color:var(--t3);font-size:.8rem;font-weight:700;flex-shrink:0;">←</span>
+          <input class="add-inp" id="addTimeEnd" placeholder="إلى (٥:٠٠ م)" style="flex:1;margin-bottom:0"/>
+        </div>
         <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:7px">مستوى الأولوية:</div>
         <div class="pri-sel">
           <button class="psb h" id="pb-h" onclick="setPri('high')">🔴 عاجل</button>
@@ -151,6 +155,13 @@
     <div class="page" id="page-wird">
       <button onclick="openQuranReader()" style="width:100%; padding:14px; background:linear-gradient(135deg, var(--gold2), var(--gold)); border:none; border-radius:12px; color:#000; font-family:'Tajawal', sans-serif; font-size:1.1rem; font-weight:900; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 20px rgba(200,168,75,0.15);">📖 فتح المصحف وقراءة الورد</button>
       <div id="prayerTimesCard"></div>
+
+      <!-- Adhkar Buttons -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button onclick="openAdhkar('sabah')" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,rgba(200,168,75,.15),rgba(200,168,75,.05));border:1px solid rgba(200,168,75,.3);border-radius:14px;color:var(--gold);font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🌅 أذكار الصباح</button>
+        <button onclick="openAdhkar('masa')" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(59,130,246,.03));border:1px solid rgba(59,130,246,.25);border-radius:14px;color:var(--sap);font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🌙 أذكار المساء</button>
+      </div>
+
       <div class="ayah-card">
         <div class="ayah-ar" id="ayahTxt">...</div>
         <div class="ayah-src" id="ayahSrc"></div>
@@ -398,32 +409,29 @@
     <button onclick="closeQuranReader()" style="background:var(--rosedim); border:1px solid rgba(244,63,94,.3); border-radius:8px; color:var(--rose); font-size:1.1rem; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
   </div>
 
-  <div style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative; display:flex; justify-content:center; align-items:flex-start; background:var(--quran-bg, var(--bg)); touch-action: pan-y;" id="quranImgContainer">
+  <div style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative; display:flex; justify-content:center; align-items:flex-start; touch-action: pan-y;" id="quranImgContainer">
     <div id="quranLoader" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--gold); font-size:1.2rem; font-weight:700;">جاري التحميل...</div>
     <img id="quranPageImg" src="" style="width:100%; max-width:600px; height:auto; opacity:0; transition:opacity 0.3s;" alt="Quran Page">
-    <!-- Tap Zones -->
-    <div onclick="changeQuranPage(1)" style="position:absolute; left:0; top:0; width:45%; height:100%; cursor:pointer; z-index:10;"></div>
-    <div onclick="changeQuranPage(-1)" style="position:absolute; right:0; top:0; width:45%; height:100%; cursor:pointer; z-index:10;"></div>
   </div>
 
   <div class="quran-footer" style="background:var(--s2); border-top:1px solid var(--bdr); padding-bottom:env(safe-area-inset-bottom);">
     <!-- Page + Hizb status -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 15px;">
-      <button onclick="changeQuranPage(1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:7px 14px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">التالي »</button>
+      <button onclick="changeQuranPage(1)" style="background:var(--s3); border:1px solid var(--bdr2); border-radius:8px; padding:7px 14px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">التالي »</button>
       <div style="text-align:center;">
         <div id="quranPageNum" style="color:var(--gold); font-weight:800; font-size:.95rem;">صفحة 1</div>
-        <div id="quranHizbInfo" style="color:var(--t3); font-size:.68rem; font-weight:600; margin-top:1px;">1/2 حزب 1</div>
+        <div id="quranHizbInfo" style="color:var(--t2); font-size:.68rem; font-weight:600; margin-top:1px;">1/2 حزب 1</div>
       </div>
-      <button onclick="changeQuranPage(-1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:7px 14px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">« السابق</button>
+      <button onclick="changeQuranPage(-1)" style="background:var(--s3); border:1px solid var(--bdr2); border-radius:8px; padding:7px 14px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">« السابق</button>
     </div>
 
     <!-- Bottom Nav Icons -->
-    <div class="quran-bottom-nav" style="display:flex; justify-content:space-around; align-items:center; padding:8px 5px; border-top:1px solid rgba(255,255,255,0.05);">
-      <div onclick="toggleQuranIndex()" class="nav-item active"><span style="font-size:1.2rem">📖</span><span>الفهرس</span></div>
+    <div class="quran-bottom-nav" style="display:flex; justify-content:space-around; align-items:center; padding:8px 5px; border-top:1px solid var(--bdr);">
+      <div onclick="toggleQuranIndex()" class="nav-item"><span style="font-size:1.2rem">📖</span><span>الفهرس</span></div>
       <div class="nav-item" onclick="openKhatmah()"><span style="font-size:1.2rem">✅</span><span>الختمة</span></div>
-      <div class="nav-item" onclick="toggleBookmark()"><span id="bookmarkIcon" style="font-size:1.2rem">🔖</span><span>علامة</span></div>
-      <div class="nav-item"><span style="font-size:1.2rem">⭐</span><span>مفضلة</span></div>
-      <div class="nav-item"><span style="font-size:1.2rem">✏️</span><span>ملاحظات</span></div>
+      <div class="nav-item" onclick="openBookmarksList()"><span id="bookmarkIcon" style="font-size:1.2rem">🔖</span><span>علامة</span></div>
+      <div class="nav-item" onclick="openStarredList()"><span id="starIcon" style="font-size:1.2rem">☆</span><span>مفضلة</span></div>
+      <div class="nav-item" onclick="openNotes()"><span id="noteIcon" style="font-size:1.2rem">✏️</span><span>ملاحظات</span></div>
     </div>
   </div>
 

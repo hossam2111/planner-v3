@@ -1,10 +1,12 @@
-const CACHE_NAME = 'planner-cache-v10';
+const CACHE_NAME = 'planner-cache-v13';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './app.js',
-  './icon.svg'
+  './icon.svg',
+  './adhan.mpeg',
+  './qiyam.mpeg'
 ];
 
 self.addEventListener('install', event => {
