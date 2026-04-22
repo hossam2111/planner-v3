@@ -256,6 +256,7 @@ body::before{
 }
 .task::before{
   content:'';position:absolute;right:0;top:0;bottom:0;
+}
 .task-top{display:flex;align-items:flex-start;gap:11px;cursor:pointer}
 .chk{
   width:21px;height:21px;border-radius:6px;border:2px solid var(--t3);
@@ -572,4 +573,214 @@ body::before{
   font-weight: 800;
   color: var(--t1);
   font-size: 1rem;
+}
+
+/* ══════════════════════════════════════
+   LIGHT MODE — الخط والألوان تبقى واضحة
+══════════════════════════════════════ */
+body.light-mode {
+  --bg: #f5f0e8;
+  --s1: #ffffff;
+  --s2: #ede7d9;
+  --s3: #d9d0be;
+  --s4: #c0b49e;
+  --bdr: rgba(0,0,0,.10);
+  --bdr2: rgba(0,0,0,.15);
+
+  /* نصوص واضحة تماماً في الوضع الفاتح */
+  --t1: #111008;
+  --t2: #4a4238;
+  --t3: #78706a;
+
+  --gold: #b8860b;
+  --gold2: #8b6914;
+  --gold3: #5c4408;
+  --golddim: rgba(184,134,11,.12);
+  --goldglow: rgba(184,134,11,.22);
+
+  --em: #059669;
+  --emdim: rgba(5,150,105,.12);
+  --sap: #1d4ed8;
+  --sapdim: rgba(29,78,216,.12);
+  --rose: #dc2626;
+  --rosedim: rgba(220,38,38,.1);
+  --amb: #d97706;
+  --ambdim: rgba(217,119,6,.12);
+
+  --sh: 0 8px 24px -8px rgba(0,0,0,.12);
+  --shg: 0 0 20px rgba(184,134,11,.1);
+}
+
+body.light-mode .tabs {
+  background: rgba(237,231,217,.9);
+  border-color: rgba(0,0,0,.08);
+}
+body.light-mode .task {
+  background: rgba(255,255,255,.8);
+}
+body.light-mode .login-box {
+  background: rgba(255,255,255,.8);
+  border-top-color: rgba(184,134,11,.35);
+}
+body.light-mode body::before { opacity: .6; }
+
+.chip-theme {
+  cursor: pointer;
+  transition: all .3s ease;
+  background: var(--golddim);
+  border-color: rgba(212,175,55,.3);
+  color: var(--gold);
+  font-weight: 800;
+}
+.chip-theme:hover { opacity: .85; transform: translateY(-2px); }
+.chip.clickable { cursor: pointer; transition: all .2s; }
+.chip.clickable:hover { background: var(--golddim); border-color: rgba(212,175,55,.3); color: var(--gold); }
+
+/* ══════════════════════════════════════
+   PRAYER TIMES WIDGET
+══════════════════════════════════════ */
+.prayer-times-wrap {
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.prayer-times-grid {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  gap: 6px;
+}
+.prayer-time-cell {
+  text-align: center;
+  padding: 8px 3px;
+  background: var(--s2);
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+.prayer-time-cell.next {
+  background: var(--golddim);
+  border-color: rgba(212,175,55,.3);
+}
+.prayer-time-cell .pt-icon { font-size: .95rem; }
+.prayer-time-cell .pt-name { font-size: .6rem; font-weight: 800; color: var(--t2); margin-top: 2px; }
+.prayer-time-cell .pt-time { font-size: .68rem; font-weight: 700; color: var(--t1); margin-top: 3px; }
+.prayer-time-cell.next .pt-time { color: var(--gold); }
+
+/* ══════════════════════════════════════
+   ANNUAL CALENDAR
+══════════════════════════════════════ */
+.cal-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.cal-nav-btn {
+  background: var(--s2);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--rsm);
+  color: var(--t1);
+  font-size: 1.3rem;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-nav-btn:hover { background: var(--golddim); color: var(--gold); border-color: rgba(212,175,55,.3); }
+.cal-month-name { font-size: .92rem; font-weight: 900; color: var(--t1); text-align: center; }
+.cal-hijri-name { font-size: .7rem; color: var(--gold); font-weight: 700; text-align: center; margin-top: 2px; }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  gap: 3px;
+  margin-bottom: 10px;
+}
+.cal-header-day {
+  text-align: center;
+  font-size: .65rem;
+  font-weight: 800;
+  color: var(--t3);
+  padding: 5px 0;
+}
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  transition: all .15s;
+  min-height: 38px;
+  cursor: default;
+}
+.cal-day.empty { background: transparent; border-color: transparent; }
+.cal-day.today { border-color: var(--gold); background: var(--golddim); }
+.cal-day.today .cal-greg-day { color: var(--gold); font-size: .9rem; }
+.cal-day.fasting-weekly { background: rgba(16,185,129,.07); border-color: rgba(16,185,129,.22); }
+.cal-day.fasting-white  { background: rgba(59,130,246,.07); border-color: rgba(59,130,246,.22); }
+.cal-day.fasting-ashura { background: rgba(245,158,11,.09); border-color: rgba(245,158,11,.28); }
+.cal-day.fasting-arafa  { background: rgba(212,175,55,.12); border-color: rgba(212,175,55,.38); }
+
+.cal-greg-day { font-size: .78rem; font-weight: 800; color: var(--t1); line-height: 1; }
+.cal-hijri-day { font-size: .52rem; color: var(--t3); font-weight: 600; margin-top: 1px; }
+.cal-fasting-dot {
+  position: absolute; bottom: 3px;
+  width: 4px; height: 4px; border-radius: 50%;
+}
+.fasting-weekly .cal-fasting-dot { background: var(--em); }
+.fasting-white  .cal-fasting-dot { background: var(--sap); }
+.fasting-ashura .cal-fasting-dot { background: var(--amb); }
+.fasting-arafa  .cal-fasting-dot { background: var(--gold); }
+
+.cal-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 12px; }
+.cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: .7rem; color: var(--t2); font-weight: 600; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.legend-dot.weekly { background: var(--em); }
+.legend-dot.white  { background: var(--sap); }
+.legend-dot.ashura { background: var(--amb); }
+.legend-dot.arafa  { background: var(--gold); }
+
+.upcoming-fast {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: var(--rsm); padding: 10px 14px; margin-bottom: 7px;
+}
+
+/* ══════════════════════════════════════
+   WEEK EDIT MODE
+══════════════════════════════════════ */
+.week-cell-inp {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 3px 5px;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 16px;
+  color: var(--t1);
+  direction: rtl;
+  outline: none;
+}
+.week-time-inp {
+  width: 62px;
+  background: var(--bg);
+  border: 1px solid var(--bdr2);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 16px;
+  color: var(--t1);
+  direction: ltr;
+  outline: none;
+  margin-bottom: 2px;
+  display: block;
 }

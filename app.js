@@ -220,6 +220,8 @@ function defaultState(dow){
     quranPage: 1,
     history: {},
     yearly_plan: [],
+    routine: [],
+    weekGrid: null,
     lastReset: todayKey(),
   };
 }
@@ -304,10 +306,20 @@ async function startApp(username, name, gender){
   document.getElementById('scApp').classList.add('on');
   document.getElementById('greeting').textContent = greet(name||username, gender||'m');
   const now=new Date();
-  document.getElementById('datePill').textContent='📅 '+DAYS_AR[now.getDay()]+'، '+now.getDate()+' '+MONTHS_AR[now.getMonth()];
+  const datePillEl = document.getElementById('datePill');
+  let gregStr = '📅 '+DAYS_AR[now.getDay()]+'، '+now.getDate()+' '+MONTHS_AR[now.getMonth()];
+  try{
+    const hFmt = new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{day:'numeric',month:'long'});
+    gregStr += ' | 🌙 '+hFmt.format(now);
+  } catch{}
+  datePillEl.textContent = gregStr;
+  datePillEl.classList.add('clickable');
+  datePillEl.title = 'فتح التقويم';
+  datePillEl.onclick = goToCalendar;
   showHeaderAyah();
   renderAll();
   checkPrayerReminder();
+  fetchPrayerTimes();
     
     // Welcome Modal Logic
     if (S.lastWirdPopupDate !== todayKey()) {
@@ -338,6 +350,7 @@ function checkDayReset(){
 }
 
 async function init(){
+  initTheme();
   const sess=getSession();
   if(sess&&sess.username){
     // Verify user still exists in Supabase
@@ -381,16 +394,26 @@ function greet(name,gender){
    PRAYER REMINDER
 ══════════════════════════════ */
 function checkPrayerReminder(){
-  const h=new Date().getHours(),m=new Date().getMinutes();
-  const prayers=[
-    {id:'t2',name:'الفجر',start:4,end:6},
-    {id:'t7',name:'الظهر',start:13,end:15},
-    {id:'t9',name:'العصر',start:15,end:17},
-    {id:'t12',name:'المغرب',start:18,end:19},
-    {id:'t14',name:'العشاء',start:19,end:21},
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const staticPrayers=[
+    {id:'t3',name:'الفجر',  startH:4, endH:6},
+    {id:'t7',name:'الظهر',  startH:13,endH:15},
+    {id:'t9',name:'العصر',  startH:15,endH:17},
+    {id:'t12',name:'المغرب',startH:18,endH:19},
+    {id:'t14',name:'العشاء',startH:19,endH:21},
   ];
+  const apiMap = {t3:'Fajr', t7:'Dhuhr', t9:'Asr', t12:'Maghrib', t14:'Isha'};
+  const prayers = staticPrayers;
   for(const p of prayers){
-    if(h>=p.start&&h<=p.end){
+    let inWindow = false;
+    if(_prayerTimes && apiMap[p.id]){
+      const pm = parseTimeStr(_prayerTimes[apiMap[p.id]]);
+      if(pm!==null) inWindow = nowMin>=pm && nowMin<=pm+30;
+    } else {
+      inWindow = nowMin>=p.startH*60 && nowMin<=p.endH*60;
+    }
+    if(inWindow){
       const task=S.tasks.find(t=>t.id===p.id);
       if(task&&!task.done){
         document.getElementById('prayRemindTxt').textContent=`🕌 وقت صلاة ${p.name} — هل صليت؟`;
@@ -400,7 +423,10 @@ function checkPrayerReminder(){
     }
   }
 }
-function closePrayRemind(){ document.getElementById('prayRemind').classList.remove('on') }
+function closePrayRemind(){ document.getElementById('prayRemind').classList.remove('on'); }
+// Re-check every 5 minutes
+setInterval(checkPrayerReminder, 5*60*1000);
+setInterval(checkFastingReminder, 60*1000);
 
 /* ══════════════════════════════
    RENDER TASKS
@@ -712,39 +738,59 @@ function showHeaderAyah(){
 }
 
 function renderWeek(){
-  const today=new Date().getDay();
-  const dispOrder=[6,0,1,2,3,4,5];
-  const hdrs=['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
-  const todayDisp=dispOrder.indexOf(today);
-  const rows=[
-    {tm:'5:00 ص',cells:[{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'قرآن🌅',c:'wp'}]},
-    {tm:'9:00 ص',cells:[{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'حر',c:'wf'}]},
-    {tm:'4:30 م',cells:[{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'AI/ML 5م',c:'wai'}]},
-    {tm:'6:00 م',cells:[{t:'English🇬🇧',c:'we'},{t:'—',c:'wf'},{t:'BackEnd⚙️',c:'wb'},{t:'English🇬🇧',c:'we'},{t:'BackEnd⚙️',c:'wb'},{t:'—',c:'wf'},{t:'عائلة🏠',c:'wf'}]},
-    {tm:'8:00 م',cells:[{t:'Mobile📱',c:'wm'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'Mobile📱',c:'wm'},{t:'AI/DS🤖',c:'wai'},{t:'مراجعة',c:'wr'},{t:'وقت حر',c:'wf'}]},
-  ];
-  let h='<thead><tr><th>الوقت</th>';
-  hdrs.forEach((d,i)=>{ h+=`<th class="${i===todayDisp?'td':''}">${d}${i===todayDisp?' 📍':''}</th>`; });
-  h+='</tr></thead><tbody>';
-  rows.forEach(r=>{
-    h+=`<tr><td style="font-size:.68rem;font-weight:800;color:var(--t2);white-space:nowrap;padding:8px 10px">${r.tm}</td>`;
-    r.cells.forEach((c,i)=>{ h+=`<td ${i===todayDisp?'class="td"':''}><div class="wc ${c.c}">${c.t}</div></td>`; });
-    h+='</tr>';
-  });
-  h+='</tbody>';
-  document.getElementById('weekTbl').innerHTML=h;
+  const today = new Date().getDay();
+  const dispOrder = [6,0,1,2,3,4,5];
+  const hdrs = ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
+  const todayDisp = dispOrder.indexOf(today);
+  const rows = S.weekGrid || DEFAULT_WEEK_GRID;
 
-  const routine=[
-    {tm:'4:00 ص',n:'الاستيقاظ والوضوء'},{tm:'4:10 ص',n:'صلاة الفجر 🕌'},
-    {tm:'4:30 ص',n:'قرآن كريم وأذكار 📖'},{tm:'5:00 ص',n:'مراجعة — الوقت الذهبي 📚'},
-    {tm:'1:00 م',n:'صلاة الظهر 🕌'},{tm:'3:30 م',n:'صلاة العصر 🕌'},
-    {tm:'3:45 م',n:'رياضة / مشي 🏃'},{tm:'6:00 م',n:'صلاة المغرب 🕌'},
-    {tm:'7:30 م',n:'صلاة العشاء 🕌'},{tm:'11:00 م',n:'النوم المبكر 😴'},
-  ];
-  document.getElementById('routineList').innerHTML=routine.map(r=>`
-    <div style="display:flex;gap:12px;align-items:center;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rsm);padding:10px 15px;margin-bottom:6px">
-      <span style="font-size:.7rem;font-weight:800;color:var(--sap);min-width:52px">${r.tm}</span>
-      <span style="font-size:.84rem;font-weight:600">${r.n}</span>
+  let h = '<thead><tr><th style="font-size:.65rem;padding:8px 6px">الوقت</th>';
+  hdrs.forEach((d,i)=>{ h+=`<th class="${i===todayDisp?'td':''}">${d}${i===todayDisp?' 📍':''}</th>`; });
+  h += '</tr></thead><tbody>';
+
+  rows.forEach((r,ri)=>{
+    h += '<tr>';
+    if(_weekEditMode){
+      h += `<td style="padding:3px;vertical-align:top">
+        <input class="week-time-inp" data-r="${ri}" value="${r.tm}" placeholder="الوقت">
+        <button onclick="deleteWeekRow(${ri})" style="background:var(--rosedim);border:1px solid rgba(244,63,94,.3);color:var(--rose);cursor:pointer;border-radius:4px;padding:2px 5px;font-size:.6rem;width:100%">حذف</button>
+      </td>`;
+    } else {
+      h += `<td style="font-size:.67rem;font-weight:800;color:var(--t2);white-space:nowrap;padding:8px 8px">${r.tm}</td>`;
+    }
+    r.cells.forEach((c,ci)=>{
+      if(_weekEditMode){
+        h += `<td ${ci===todayDisp?'class="td"':''} style="padding:3px">
+          <input class="week-cell-inp" data-r="${ri}" data-c="${ci}" value="${c.t}">
+        </td>`;
+      } else {
+        h += `<td ${ci===todayDisp?'class="td"':''}><div class="wc ${c.c}">${c.t}</div></td>`;
+      }
+    });
+    h += '</tr>';
+  });
+
+  if(_weekEditMode){
+    h += `<tr><td colspan="8" style="padding:8px;text-align:center">
+      <button onclick="addWeekRow()" style="background:var(--golddim);border:1px solid rgba(212,175,55,.4);border-radius:var(--rsm);padding:7px 18px;color:var(--gold);font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer">+ إضافة صف</button>
+    </td></tr>`;
+  }
+  h += '</tbody>';
+  document.getElementById('weekTbl').innerHTML = h;
+
+  // Render custom routines
+  if(!S.routine || !S.routine.length){
+    document.getElementById('routineList').innerHTML = '<div style="color:var(--t3);font-size:.78rem;padding:10px 0;text-align:center">لا يوجد روتين شخصي بعد — اضغط + إضافة.</div>';
+    return;
+  }
+  const dayShort = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  document.getElementById('routineList').innerHTML = S.routine.map(r=>`
+    <div style="display:flex;gap:10px;align-items:center;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rsm);padding:10px 14px;margin-bottom:6px">
+      <div style="flex:1">
+        <div style="font-size:.84rem;font-weight:700;color:var(--t1)">${r.n}</div>
+        <div style="font-size:.68rem;color:var(--t2);margin-top:3px">${r.days.map(d=>dayShort[d]).join('، ')}</div>
+      </div>
+      <button onclick="delRoutine('${r.id}')" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:.9rem;padding:4px">✕</button>
     </div>`).join('');
 }
 
@@ -798,9 +844,10 @@ function tab(id,btn){
   btn.classList.add('on');
   document.getElementById('page-'+id).classList.add('on');
   if(id==='prog'){ updateRing(); renderStreak(); }
-  if(id==='wird'){ renderWird(); }
+  if(id==='wird'){ renderWird(); renderPrayerTimesCard(); }
   if(id==='year'){ renderYearlyPlan(); }
   if(id==='hist'){ renderHistory(); }
+  if(id==='cal'){ renderCalendar(); }
 }
 
 /* ══════════════════════════════
@@ -890,7 +937,7 @@ function renderHistory(){
 /* ══════════════════════════════
    RENDER ALL
 ══════════════════════════════ */
-function renderAll(){ renderTasks(); renderWird(); renderWeek(); updateRing(); renderYearlyPlan(); renderHistory(); }
+function renderAll(){ renderTasks(); renderWird(); renderPrayerTimesCard(); renderWeek(); updateRing(); renderYearlyPlan(); renderHistory(); }
 
 /* ══════════════════════════════
    TOAST
@@ -964,7 +1011,7 @@ window.installPWA = async function() {
     }
     deferredPrompt = null;
   } else {
-    showToast('للتثبيت هنا: اضغط زر المشاركة ثم "إضافة للشاشة الرئيسية"!', 'gold');
+    toast('للتثبيت: اضغط زر المشاركة ثم "إضافة للشاشة الرئيسية"!', 'gd');
     const banner = document.getElementById('pwaInstallModal');
     if(banner) banner.style.display = 'none';
   }
@@ -972,6 +1019,266 @@ window.installPWA = async function() {
 
 
 
+
+/* ══════════════════════════════
+   LIGHT / DARK MODE
+══════════════════════════════ */
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.textContent = isLight ? '🌙 داكن' : '☀️ فاتح';
+}
+function initTheme(){
+  const saved = localStorage.getItem('theme');
+  if(saved === 'light'){
+    document.body.classList.add('light-mode');
+    const btn = document.getElementById('themeToggle');
+    if(btn) btn.textContent = '🌙 داكن';
+  }
+}
+
+/* ══════════════════════════════
+   PRAYER TIMES — AlAdhan API
+══════════════════════════════ */
+let _prayerTimes = null;
+
+function parseTimeStr(t){
+  if(!t) return null;
+  const clean = t.replace(/\s*\(.*\)/,'').trim();
+  const [h,m] = clean.split(':').map(Number);
+  return h*60+m;
+}
+
+function formatPrayerTime(t){
+  if(!t) return '--:--';
+  const clean = t.replace(/\s*\(.*\)/,'').trim();
+  const [h,m] = clean.split(':').map(Number);
+  const period = h>=12 ? 'م' : 'ص';
+  const h12 = h===0?12:h>12?h-12:h;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+
+async function fetchPrayerTimes(){
+  const dateKey = todayKey();
+  const cached = JSON.parse(localStorage.getItem('prayer_times')||'null');
+  if(cached && cached.date===dateKey){ _prayerTimes=cached.times; renderPrayerTimesCard(); return; }
+  try{
+    let url;
+    try{
+      const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));
+      const {latitude:lat,longitude:lng} = pos.coords;
+      const ts = Math.floor(Date.now()/1000);
+      url = `https://api.aladhan.com/v1/timings/${ts}?latitude=${lat}&longitude=${lng}&method=5`;
+    } catch{
+      const now=new Date();
+      url = `https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt&method=5&date=${now.getDate()}-${now.getMonth()+1}-${now.getFullYear()}`;
+    }
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.code===200){
+      _prayerTimes = data.data.timings;
+      localStorage.setItem('prayer_times', JSON.stringify({date:dateKey, times:_prayerTimes}));
+    }
+  } catch(e){ /* silent — hardcoded fallback used */ }
+  renderPrayerTimesCard();
+}
+
+function renderPrayerTimesCard(){
+  const el = document.getElementById('prayerTimesCard');
+  if(!el) return;
+  if(!_prayerTimes){ el.innerHTML=''; return; }
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const prayers = [
+    {name:'الفجر',  key:'Fajr',    icon:'🌅'},
+    {name:'الظهر',  key:'Dhuhr',   icon:'☀️'},
+    {name:'العصر',  key:'Asr',     icon:'🌤️'},
+    {name:'المغرب', key:'Maghrib', icon:'🌆'},
+    {name:'العشاء', key:'Isha',    icon:'🌙'},
+  ];
+  // Find next prayer
+  let nextIdx = prayers.findIndex(p=>{ const pm=parseTimeStr(_prayerTimes[p.key]); return pm&&pm>nowMin; });
+  el.innerHTML = `
+    <div class="slbl">مواقيت الصلاة اليوم</div>
+    <div class="prayer-times-wrap">
+      <div class="prayer-times-grid">
+        ${prayers.map((p,i)=>`
+          <div class="prayer-time-cell ${i===nextIdx?'next':''}">
+            <div class="pt-icon">${p.icon}</div>
+            <div class="pt-name">${p.name}</div>
+            <div class="pt-time">${formatPrayerTime(_prayerTimes[p.key])}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════
+   WEEK SCHEDULE — DYNAMIC GRID
+══════════════════════════════ */
+const DEFAULT_WEEK_GRID = [
+  {tm:'5:00 ص', cells:[{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'قرآن🌅',c:'wp'}]},
+  {tm:'9:00 ص', cells:[{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'حر',c:'wf'}]},
+  {tm:'4:30 م', cells:[{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'AI/ML',c:'wai'}]},
+  {tm:'6:00 م', cells:[{t:'English',c:'we'},{t:'—',c:'wf'},{t:'BackEnd',c:'wb'},{t:'English',c:'we'},{t:'BackEnd',c:'wb'},{t:'—',c:'wf'},{t:'عائلة',c:'wf'}]},
+  {tm:'8:00 م', cells:[{t:'Mobile📱',c:'wm'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'Mobile📱',c:'wm'},{t:'AI/DS',c:'wai'},{t:'مراجعة',c:'wr'},{t:'وقت حر',c:'wf'}]},
+];
+
+let _weekEditMode = false;
+
+function toggleWeekEdit(){
+  if(_weekEditMode){
+    // Save: collect values from inputs
+    if(!S.weekGrid) S.weekGrid = JSON.parse(JSON.stringify(DEFAULT_WEEK_GRID));
+    document.querySelectorAll('.week-cell-inp').forEach(inp=>{
+      const r=parseInt(inp.dataset.r), c=parseInt(inp.dataset.c);
+      if(S.weekGrid[r] && S.weekGrid[r].cells[c]) S.weekGrid[r].cells[c].t = inp.value;
+    });
+    document.querySelectorAll('.week-time-inp').forEach(inp=>{
+      const r=parseInt(inp.dataset.r);
+      if(S.weekGrid[r]) S.weekGrid[r].tm = inp.value;
+    });
+    saveState();
+    _weekEditMode = false;
+    document.getElementById('weekEditBtn').textContent = '✏️ تعديل';
+    toast('تم حفظ الجدول ✓','ok');
+  } else {
+    if(!S.weekGrid) S.weekGrid = JSON.parse(JSON.stringify(DEFAULT_WEEK_GRID));
+    _weekEditMode = true;
+    document.getElementById('weekEditBtn').textContent = '💾 حفظ';
+  }
+  renderWeek();
+}
+window.toggleWeekEdit = toggleWeekEdit;
+
+function addWeekRow(){
+  if(!S.weekGrid) S.weekGrid = JSON.parse(JSON.stringify(DEFAULT_WEEK_GRID));
+  S.weekGrid.push({tm:'--:--', cells:Array(7).fill(null).map(()=>({t:'—',c:'wf'}))});
+  saveState(); renderWeek();
+}
+window.addWeekRow = addWeekRow;
+
+function deleteWeekRow(idx){
+  if(!S.weekGrid) S.weekGrid = JSON.parse(JSON.stringify(DEFAULT_WEEK_GRID));
+  S.weekGrid.splice(idx,1); saveState(); renderWeek();
+}
+window.deleteWeekRow = deleteWeekRow;
+
+/* ══════════════════════════════
+   ANNUAL CALENDAR
+══════════════════════════════ */
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth();
+
+function getHijriDate(date){
+  try{
+    const fmt = new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{year:'numeric',month:'numeric',day:'numeric'});
+    const parts = fmt.formatToParts(date);
+    const get = type => { const p=parts.find(x=>x.type===type); return p?parseInt(p.value.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))):0; };
+    return {year:get('year'), month:get('month'), day:get('day')};
+  } catch{ return {year:0,month:0,day:0}; }
+}
+
+function isFastingDay(date){
+  const dow = date.getDay();
+  if(dow===1) return {type:'weekly', label:'صيام الاثنين'};
+  if(dow===4) return {type:'weekly', label:'صيام الخميس'};
+  const h = getHijriDate(date);
+  if([13,14,15].includes(h.day)) return {type:'white', label:`الأيام البيض (${h.day})`};
+  if(h.month===1 && [9,10].includes(h.day)) return {type:'ashura', label:'يوم عاشوراء'};
+  if(h.month===12 && h.day===9) return {type:'arafa', label:'يوم عرفة'};
+  return null;
+}
+
+function renderCalendar(){
+  const el = document.getElementById('calContainer');
+  if(!el) return;
+  const now = new Date();
+  const firstDay = new Date(_calYear, _calMonth, 1);
+  const lastDay  = new Date(_calYear, _calMonth+1, 0);
+  const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  let hijriMonth = '';
+  try{
+    hijriMonth = new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{month:'long',year:'numeric'}).format(firstDay);
+  } catch{}
+  let html = `
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--}renderCalendar()">›</button>
+      <div>
+        <div class="cal-month-name">${monthNames[_calMonth]} ${_calYear}</div>
+        <div class="cal-hijri-name">${hijriMonth}</div>
+      </div>
+      <button class="cal-nav-btn" onclick="_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++}renderCalendar()">‹</button>
+    </div>
+    <div class="cal-grid">
+      ${['ح','ن','ث','ر','خ','ج','س'].map(d=>`<div class="cal-header-day">${d}</div>`).join('')}
+      ${Array(firstDay.getDay()).fill('<div class="cal-day empty"></div>').join('')}`;
+
+  for(let day=1; day<=lastDay.getDate(); day++){
+    const date = new Date(_calYear, _calMonth, day);
+    const h = getHijriDate(date);
+    const fast = isFastingDay(date);
+    const isToday = date.toDateString()===now.toDateString();
+    let cls = 'cal-day';
+    if(isToday) cls += ' today';
+    if(fast) cls += ' fasting-'+fast.type;
+    html += `<div class="${cls}" title="${fast?fast.label:''}">
+      <div class="cal-greg-day">${day}</div>
+      <div class="cal-hijri-day">${h.day||''}</div>
+      ${fast?'<div class="cal-fasting-dot"></div>':''}
+    </div>`;
+  }
+  html += `</div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="legend-dot weekly"></div><span>إثنين/خميس</span></div>
+      <div class="cal-legend-item"><div class="legend-dot white"></div><span>الأيام البيض</span></div>
+      <div class="cal-legend-item"><div class="legend-dot ashura"></div><span>عاشوراء</span></div>
+      <div class="cal-legend-item"><div class="legend-dot arafa"></div><span>عرفة</span></div>
+    </div>`;
+
+  // Upcoming fasting days
+  const upcoming = [];
+  for(let d=0; d<60 && upcoming.length<6; d++){
+    const date = new Date(now); date.setDate(now.getDate()+d);
+    const fast = isFastingDay(date);
+    if(fast) upcoming.push({date, fast});
+  }
+  if(upcoming.length){
+    html += `<div class="slbl" style="margin-top:16px">أقرب أيام الصيام</div>`;
+    upcoming.forEach(({date,fast})=>{
+      const h = getHijriDate(date);
+      const dayName = DAYS_AR[date.getDay()];
+      const gregStr = `${date.getDate()} ${MONTHS_AR[date.getMonth()]}`;
+      const hijriStr = `${h.day}/${h.month} هـ`;
+      html += `<div class="upcoming-fast">
+        <div class="legend-dot ${fast.type}" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div style="font-size:.83rem;font-weight:700;color:var(--t1)">${dayName} ${gregStr}</div>
+          <div style="font-size:.7rem;color:var(--t3)">${hijriStr} • ${fast.label}</div>
+        </div>
+        <div style="font-size:.68rem;font-weight:800;color:var(--gold);background:var(--golddim);padding:3px 8px;border-radius:10px">صيام</div>
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+}
+
+function checkFastingReminder(){
+  const now = new Date();
+  if(now.getHours()===23 && now.getMinutes()===0){
+    const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+    const fast = isFastingDay(tomorrow);
+    if(fast && 'Notification' in window && Notification.permission==='granted'){
+      new Notification('تذكير: غداً '+fast.label, {body:'لا تنسَ نية الصيام 🌙', icon:'./icon.svg'});
+    }
+  }
+}
+
+// Make datePill clickable to jump to calendar
+function goToCalendar(){
+  const btn = document.querySelector('.tab[onclick*="cal"]');
+  if(btn){ tab('cal',btn); btn.scrollIntoView({behavior:'smooth'}); }
+}
 
 /* ══════════════════════════════
    QURAN READER
@@ -1116,7 +1423,7 @@ function openQuranReader() {
 function closeQuranReader() {
   document.getElementById('quranOverlay').style.display = 'none';
   saveState();
-  showToast('تم حفظ تقدمك بنجاح', 'gold');
+  toast('تم حفظ موضعك ✓', 'gd');
 }
 
 function changeQuranPage(step) {
@@ -1127,32 +1434,63 @@ function changeQuranPage(step) {
   renderQuranPage();
 }
 
+function getHizbInfo(page){
+  const pagesPerHizb = 604/60;
+  const hizbFloat = (page-1)/pagesPerHizb;
+  const hizbNum = Math.min(Math.floor(hizbFloat)+1, 60);
+  const half = (hizbFloat-Math.floor(hizbFloat)) < 0.5 ? 1 : 2;
+  return {hizbNum, half};
+}
+
+// Bookmarks stored in state
+function toggleBookmark(){
+  if(!S.quranBookmarks) S.quranBookmarks = {};
+  const p = S.quranPage;
+  if(S.quranBookmarks[p]){
+    delete S.quranBookmarks[p];
+    document.getElementById('bookmarkIcon').textContent = '🔖';
+    toast('تمت إزالة العلامة','warn');
+  } else {
+    S.quranBookmarks[p] = true;
+    document.getElementById('bookmarkIcon').textContent = '🔖';
+    toast('تمت إضافة علامة للصفحة '+p+' 🔖','gd');
+  }
+  saveState();
+}
+
+function openKhatmah(){
+  toast('قريباً: تتبع الختمة 📖','gd');
+}
+
 function renderQuranPage() {
   const p = S.quranPage;
   const pStr = p.toString().padStart(3, '0');
   const imgUrl = `https://files.quran.app/hafs/madani/width_1024/page${pStr}.png`;
-  
+
   const imgEl = document.getElementById('quranPageImg');
   const loader = document.getElementById('quranLoader');
-  
+
   loader.style.display = 'block';
+  loader.textContent = 'جاري التحميل...';
   imgEl.style.opacity = '0';
-  
-  imgEl.onload = () => {
-    loader.style.display = 'none';
-    imgEl.style.opacity = '1';
-  };
-  
-  imgEl.onerror = () => {
-    loader.textContent = 'خطأ في التحميل، تأكد من اتصالك بالإنترنت';
-  };
-  
+
+  imgEl.onload = () => { loader.style.display='none'; imgEl.style.opacity='1'; };
+  imgEl.onerror = () => { loader.textContent='تعذّر التحميل — تحقق من الاتصال بالإنترنت'; };
+
   imgEl.src = imgUrl;
   document.getElementById('quranPageNum').textContent = `صفحة ${p}`;
-  
+
+  const {hizbNum, half} = getHizbInfo(p);
+  const hizbEl = document.getElementById('quranHizbInfo');
+  if(hizbEl) hizbEl.textContent = `${half}/2 حزب ${hizbNum}`;
+
   const info = getPageInfo(p);
-  document.getElementById('quranHeaderSurah').textContent = "سورة " + info.surahName;
+  document.getElementById('quranHeaderSurah').textContent = 'سورة ' + info.surahName;
   document.getElementById('quranHeaderJuz').textContent = info.partName;
+
+  // Update bookmark icon
+  const bkIco = document.getElementById('bookmarkIcon');
+  if(bkIco) bkIco.textContent = (S.quranBookmarks && S.quranBookmarks[p]) ? '⭐' : '🔖';
 }
 
 function toggleQuranIndex() {
@@ -1206,18 +1544,3 @@ function switchQuranIndexTab(tab) {
   }
 }
 
-// Ensure the hijri date is appended
-const origStartApp = startApp;
-startApp = function(u,n,g) {
-  origStartApp(u,n,g);
-  
-  // Attach hijri string if missing
-  const now = new Date();
-  const hijriFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day: 'numeric', month: 'long', year: 'numeric'});
-  const hijriStr = hijriFormatter.format(now).replace(/١/g,'1').replace(/٢/g,'2').replace(/٣/g,'3').replace(/٤/g,'4').replace(/٥/g,'5').replace(/٦/g,'6').replace(/٧/g,'7').replace(/٨/g,'8').replace(/٩/g,'9').replace(/٠/g,'0');
-  
-  const datePill = document.getElementById('datePill');
-  if (datePill && !datePill.textContent.includes('🌙')) {
-      datePill.textContent += ' | 🌙 ' + hijriStr;
-  }
-};

@@ -68,6 +68,7 @@
       <div class="hdr-row">
         <div class="chip" id="datePill">📅 ...</div>
         <div class="chip chip-gold" id="progPill">⏳ 0%</div>
+        <div class="chip chip-theme" id="themeToggle" onclick="toggleTheme()">☀️ فاتح</div>
         <div class="chip chip-gold" id="btnShowModalInstall" onclick="document.getElementById('pwaInstallModal').style.display='flex'">تثبيت 📱</div>
         <div class="chip chip-logout" onclick="logout()">خروج 🔓</div>
       </div>
@@ -81,6 +82,7 @@
       <button class="tab"     onclick="tab('prog',this)">📊 الإنجاز</button>
       <button class="tab"     onclick="tab('year',this)">🎯 السنة</button>
       <button class="tab"     onclick="tab('hist',this)">📜 الأرشيف</button>
+      <button class="tab"     onclick="tab('cal',this)">📅 التقويم</button>
     </div>
 
     <!-- ── TODAY ── -->
@@ -147,7 +149,9 @@
 
     <!-- ── WIRD ── -->
     <div class="page" id="page-wird">
-      <button onclick="openQuranReader()" style="width:100%; padding:14px; background:linear-gradient(135deg, var(--gold2), var(--gold)); border:none; border-radius:12px; color:#000; font-family:'Tajawal', sans-serif; font-size:1.1rem; font-weight:900; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 20px rgba(200,168,75,0.15);">📖 فتح المصحف وقراءة الورد</button>\n        <div class="ayah-card">
+      <button onclick="openQuranReader()" style="width:100%; padding:14px; background:linear-gradient(135deg, var(--gold2), var(--gold)); border:none; border-radius:12px; color:#000; font-family:'Tajawal', sans-serif; font-size:1.1rem; font-weight:900; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 20px rgba(200,168,75,0.15);">📖 فتح المصحف وقراءة الورد</button>
+      <div id="prayerTimesCard"></div>
+      <div class="ayah-card">
         <div class="ayah-ar" id="ayahTxt">...</div>
         <div class="ayah-src" id="ayahSrc"></div>
         <button class="ayah-next" onclick="nextAyah()">↻ اقتباس آخر</button>
@@ -162,7 +166,10 @@
 
     <!-- ── WEEK ── -->
     <div class="page" id="page-week">
-      <div class="slbl">المحاضرات الأسبوعية (ثابت)</div>
+      <div class="slbl" style="display:flex;justify-content:space-between;align-items:center">
+        الجدول الأسبوعي
+        <button id="weekEditBtn" onclick="toggleWeekEdit()" style="background:var(--s2);border:1px solid var(--bdr2);border-radius:6px;padding:4px 10px;font-size:.7rem;font-weight:700;color:var(--gold);cursor:pointer">✏️ تعديل</button>
+      </div>
       <div class="week-wrap"><table class="week-tbl" id="weekTbl"></table></div>
       
       <div class="slbl" style="margin-top:22px; display:flex; justify-content:space-between; align-items:center;">
@@ -253,6 +260,15 @@
       <div id="histContainer"></div>
       </div>
   
+    <!-- ── CALENDAR ── -->
+    <div class="page" id="page-cal">
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:16px;text-align:center">
+        <h2 style="margin:0 0 8px;color:var(--gold)">التقويم السنوي 📅</h2>
+        <p style="font-size:0.8rem;color:var(--t2);margin:0;line-height:1.5">تقويم هجري وميلادي مع تمييز أيام الصيام المستحبة</p>
+      </div>
+      <div id="calContainer"></div>
+    </div>
+
       <!-- Developer Credit -->
       <div style="text-align:center; padding: 25px 10px 15px; margin-top:20px; border-top:1px solid var(--bdr); font-family:'Tajawal', sans-serif; opacity:0.85">
         <p style="font-size:0.75rem; color:var(--t2); margin-bottom:6px; font-weight:600">تطوير وتصميم</p>
@@ -362,93 +378,71 @@
     <button onclick="document.getElementById('wirdWelcomeModal').style.display='none'" style="background:none; border:none; color:#8997aa; font-family:'Tajawal', sans-serif; font-size:0.85rem; font-weight:700; cursor:pointer; padding:15px 10px 0; margin-top:5px; opacity:0.8">تخطي مؤقتاً</button>
   </div>
 </div>
-<!--  QURAN READER OVERLAY  -->\n
 <!--  QURAN READER OVERLAY  -->
-
-  
-  <!-- Quran Index Modal -->
-  <div id="quranIndexModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:20000; flex-direction:column;">
-    <div style="padding:calc(15px + env(safe-area-inset-top)) 15px 15px 15px; border-bottom:1px solid var(--bdr); display:flex; justify-content:space-between; align-items:center; background:var(--s2);">
-      <button onclick="toggleQuranIndex()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
-      <div style="font-weight:800; color:var(--t1); font-size:1.2rem;">الفهرس</div>
-      <div style="width:24px;"></div>
-    </div>
-    
-    <!-- Tabs -->
-    <div style="display:flex; padding:15px; gap:10px; background:var(--s2);">
-      <button id="tabSurahsBtn" onclick="switchQuranIndexTab('surahs')" class="quran-tab active" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">السور</button>
-      <button id="tabJuzsBtn" onclick="switchQuranIndexTab('juzs')" class="quran-tab" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">الأجزاء</button>
-    </div>
-    
-    <!-- List Container -->
-    <div id="quranIndexList" style="flex:1; overflow-y:auto; padding:15px; padding-bottom:env(safe-area-inset-bottom);"></div>
-  </div>
-</div>
 
 
 <!--  QURAN READER OVERLAY  -->
 <div class="quran-overlay" id="quranOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:10000; flex-direction:column;">
-  
+
   <div class="quran-header" style="background:var(--s2); display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--bdr); padding:calc(10px + env(safe-area-inset-top)) 15px 10px 15px;">
     <!-- Index Button -->
-    <button onclick="toggleQuranIndex()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;">
-      <i class="fas fa-list-ul"></i>
-    </button>
-    
+    <button onclick="toggleQuranIndex()" style="background:var(--s3); border:1px solid var(--bdr2); border-radius:8px; color:var(--t1); font-size:1.1rem; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center;">☰</button>
+
     <!-- Title Info -->
     <div style="text-align:center;">
       <div id="quranHeaderSurah" style="font-weight:800; color:var(--t1); font-size:1.1rem; font-family:'Tajawal', sans-serif;">سورة الفاتحة</div>
       <div id="quranHeaderJuz" style="color:var(--gold); font-size:0.8rem; font-weight:600;">الجزء الأول</div>
     </div>
-    
+
     <!-- Close Button -->
-    <button onclick="closeQuranReader()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;">
-      <i class="fas fa-times"></i>
-    </button>
+    <button onclick="closeQuranReader()" style="background:var(--rosedim); border:1px solid rgba(244,63,94,.3); border-radius:8px; color:var(--rose); font-size:1.1rem; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
   </div>
 
-  <div style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative; display:flex; justify-content:center; align-items:center; background:var(--bg); touch-action: pan-y;" id="quranImgContainer">
+  <div style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative; display:flex; justify-content:center; align-items:flex-start; background:var(--quran-bg, var(--bg)); touch-action: pan-y;" id="quranImgContainer">
     <div id="quranLoader" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--gold); font-size:1.2rem; font-weight:700;">جاري التحميل...</div>
     <img id="quranPageImg" src="" style="width:100%; max-width:600px; height:auto; opacity:0; transition:opacity 0.3s;" alt="Quran Page">
     <!-- Tap Zones -->
-    <div onclick="changeQuranPage(1)" style="position:absolute; left:0; top:0; width:50%; height:100%; cursor:pointer; z-index:10;"></div>
-    <div onclick="changeQuranPage(-1)" style="position:absolute; right:0; top:0; width:50%; height:100%; cursor:pointer; z-index:10;"></div>
+    <div onclick="changeQuranPage(1)" style="position:absolute; left:0; top:0; width:45%; height:100%; cursor:pointer; z-index:10;"></div>
+    <div onclick="changeQuranPage(-1)" style="position:absolute; right:0; top:0; width:45%; height:100%; cursor:pointer; z-index:10;"></div>
   </div>
 
   <div class="quran-footer" style="background:var(--s2); border-top:1px solid var(--bdr); padding-bottom:env(safe-area-inset-bottom);">
-    <!-- Reader controls -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px;">
-      <button onclick="changeQuranPage(1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:8px 15px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">التالي »</button>
-      <div id="quranPageNum" style="color:var(--gold); font-weight:800; font-size:1rem; background:var(--golddim); padding:4px 15px; border-radius:20px;">صفحة 1</div>
-      <button onclick="changeQuranPage(-1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:8px 15px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">« السابق</button>
+    <!-- Page + Hizb status -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 15px;">
+      <button onclick="changeQuranPage(1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:7px 14px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">التالي »</button>
+      <div style="text-align:center;">
+        <div id="quranPageNum" style="color:var(--gold); font-weight:800; font-size:.95rem;">صفحة 1</div>
+        <div id="quranHizbInfo" style="color:var(--t3); font-size:.68rem; font-weight:600; margin-top:1px;">1/2 حزب 1</div>
+      </div>
+      <button onclick="changeQuranPage(-1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:7px 14px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">« السابق</button>
     </div>
-    
+
     <!-- Bottom Nav Icons -->
-    <div class="quran-bottom-nav" style="display:flex; justify-content:space-around; align-items:center; padding:10px 5px; border-top:1px solid rgba(255,255,255,0.05);">
-      <div onclick="toggleQuranIndex()" class="nav-item active"><i class="fas fa-book-open"></i><span>الفهرس</span></div>
-      <div class="nav-item"><i class="fas fa-check-double"></i><span>الختمة</span></div>
-      <div class="nav-item"><i class="fas fa-bookmark"></i><span>العلامات</span></div>
-      <div class="nav-item"><i class="fas fa-star"></i><span>المفضلة</span></div>
-      <div class="nav-item"><i class="fas fa-pen"></i><span>ملاحظات</span></div>
+    <div class="quran-bottom-nav" style="display:flex; justify-content:space-around; align-items:center; padding:8px 5px; border-top:1px solid rgba(255,255,255,0.05);">
+      <div onclick="toggleQuranIndex()" class="nav-item active"><span style="font-size:1.2rem">📖</span><span>الفهرس</span></div>
+      <div class="nav-item" onclick="openKhatmah()"><span style="font-size:1.2rem">✅</span><span>الختمة</span></div>
+      <div class="nav-item" onclick="toggleBookmark()"><span id="bookmarkIcon" style="font-size:1.2rem">🔖</span><span>علامة</span></div>
+      <div class="nav-item"><span style="font-size:1.2rem">⭐</span><span>مفضلة</span></div>
+      <div class="nav-item"><span style="font-size:1.2rem">✏️</span><span>ملاحظات</span></div>
     </div>
   </div>
-  
+
   <!-- Quran Index Modal -->
   <div id="quranIndexModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:20000; flex-direction:column;">
-    <div style="padding:calc(15px + env(safe-area-inset-top)) 15px 15px 15px; border-bottom:1px solid var(--bdr); display:flex; justify-content:space-between; align-items:center; background:var(--s2);">
-      <button onclick="toggleQuranIndex()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
-      <div style="font-weight:800; color:var(--t1); font-size:1.2rem;">الفهرس</div>
-      <div style="width:24px;"></div>
+    <div style="padding:calc(12px + env(safe-area-inset-top)) 15px 12px 15px; border-bottom:1px solid var(--bdr); display:flex; justify-content:space-between; align-items:center; background:var(--s2);">
+      <button onclick="toggleQuranIndex()" style="background:var(--s3); border:1px solid var(--bdr2); border-radius:8px; color:var(--t1); width:34px; height:34px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+      <div style="font-weight:800; color:var(--t1); font-size:1.1rem;">فهرس القرآن الكريم</div>
+      <div style="width:34px;"></div>
     </div>
-    
+
     <!-- Tabs -->
-    <div style="display:flex; padding:15px; gap:10px; background:var(--s2);">
-      <button id="tabSurahsBtn" onclick="switchQuranIndexTab('surahs')" class="quran-tab active" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">السور</button>
-      <button id="tabJuzsBtn" onclick="switchQuranIndexTab('juzs')" class="quran-tab" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">الأجزاء</button>
+    <div style="display:flex; padding:12px; gap:8px; background:var(--s2);">
+      <button id="tabSurahsBtn" onclick="switchQuranIndexTab('surahs')" class="quran-tab active" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">📋 السور</button>
+      <button id="tabJuzsBtn" onclick="switchQuranIndexTab('juzs')" class="quran-tab" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">🗂️ الأجزاء</button>
     </div>
-    
+
     <!-- List Container -->
-    <div id="quranIndexList" style="flex:1; overflow-y:auto; padding:15px; padding-bottom:env(safe-area-inset-bottom);"></div>
+    <div id="quranIndexList" style="flex:1; overflow-y:auto; padding:10px; padding-bottom:env(safe-area-inset-bottom);"></div>
   </div>
 </div>
 
