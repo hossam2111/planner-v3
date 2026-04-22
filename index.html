@@ -68,9 +68,11 @@
       <div class="hdr-row">
         <div class="chip" id="datePill">📅 ...</div>
         <div class="chip chip-gold" id="progPill">⏳ 0%</div>
-        <div class="chip chip-theme" id="themeToggle" onclick="toggleTheme()">☀️ فاتح</div>
-        <div class="chip chip-gold" id="btnShowModalInstall" onclick="document.getElementById('pwaInstallModal').style.display='flex'">تثبيت 📱</div>
-        <div class="chip chip-logout" onclick="logout()">خروج 🔓</div>
+      </div>
+      <div class="hdr-row" style="margin-top:8px;gap:6px">
+        <div class="chip chip-theme" id="themeToggle" onclick="toggleTheme()" style="font-size:.7rem;padding:5px 12px">☀️ فاتح</div>
+        <div class="chip" id="btnShowModalInstall" onclick="document.getElementById('pwaInstallModal').style.display='flex'" style="font-size:.7rem;padding:5px 12px;cursor:pointer">📱 تثبيت</div>
+        <div class="chip chip-logout" onclick="logout()" style="font-size:.7rem;padding:5px 12px">🔓 خروج</div>
       </div>
     </div>
 

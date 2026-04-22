@@ -98,9 +98,20 @@ const _audioAdhan = new Audio('./adhan.mpeg');
 const _audioQiyam = new Audio('./qiyam.mpeg');
 _audioAdhan.preload = 'auto';
 _audioQiyam.preload = 'auto';
-function playAdhan(){ try{ _audioAdhan.currentTime=0; _audioAdhan.play(); }catch(e){} }
-function playQiyam(){ try{ _audioQiyam.currentTime=0; _audioQiyam.play(); }catch(e){} }
-function stopAudio(){ _audioAdhan.pause(); _audioAdhan.currentTime=0; _audioQiyam.pause(); _audioQiyam.currentTime=0; }
+_audioAdhan.volume = 0.5;
+_audioQiyam.volume = 0.4;
+let _audioStopTimer = null;
+function playAdhan(){ try{ stopAudio(); _audioAdhan.currentTime=0; _audioAdhan.play(); }catch(e){} }
+function playQiyam(){ try{ stopAudio(); _audioQiyam.currentTime=0; _audioQiyam.play(); }catch(e){} }
+function playStartupAudio(){
+  try{
+    _audioQiyam.volume = 0.3;
+    _audioQiyam.currentTime = 0;
+    _audioQiyam.play();
+    _audioStopTimer = setTimeout(()=>{ _audioQiyam.pause(); _audioQiyam.currentTime=0; _audioQiyam.volume=0.4; }, 4000);
+  }catch(e){}
+}
+function stopAudio(){ clearTimeout(_audioStopTimer); _audioAdhan.pause(); _audioAdhan.currentTime=0; _audioQiyam.pause(); _audioQiyam.currentTime=0; }
 
 /* ══════════════════════════════
    ADHKAR
@@ -370,17 +381,23 @@ async function startApp(username, name, gender){
   renderAll();
   checkPrayerReminder();
   fetchPrayerTimes();
-    
-    // Welcome Modal Logic
-    if (S.lastWirdPopupDate !== todayKey()) {
-        const wirdModal = document.getElementById('wirdWelcomeModal');
-        if (wirdModal) {
-            wirdModal.style.display = 'flex';
-            S.lastWirdPopupDate = todayKey();
-            saveState();
-        }
+
+  // Startup audio — first 4 seconds only, once per day
+  if(!sessionStorage.getItem('startupAudioPlayed')){
+    playStartupAudio();
+    sessionStorage.setItem('startupAudioPlayed','1');
+  }
+
+  // Welcome Modal Logic — once per day
+  if (S.lastWirdPopupDate !== todayKey()) {
+    const wirdModal = document.getElementById('wirdWelcomeModal');
+    if (wirdModal) {
+      wirdModal.style.display = 'flex';
+      S.lastWirdPopupDate = todayKey();
+      saveState();
     }
   }
+}
 
 function checkDayReset(){
   const k=todayKey();
@@ -473,9 +490,11 @@ function parseArabicTime(str){
   return h*60+mn;
 }
 
+const _prayerReminderDismissed = {};
 function checkPrayerReminder(){
   const now=new Date();
   const nowMin=now.getHours()*60+now.getMinutes();
+  const todayK=todayKey();
   const staticPrayers=[
     {id:'t3',name:'الفجر',  startH:4, endH:6},
     {id:'t7',name:'الظهر',  startH:13,endH:15},
@@ -485,6 +504,8 @@ function checkPrayerReminder(){
   ];
   const apiMap={t3:'Fajr',t7:'Dhuhr',t9:'Asr',t12:'Maghrib',t14:'Isha'};
   for(const p of staticPrayers){
+    // Skip if already dismissed today for this prayer
+    if(_prayerReminderDismissed[todayK+'_'+p.id]) continue;
     let inWindow=false;
     if(_prayerTimes&&apiMap[p.id]){
       const pm=parseTimeStr(_prayerTimes[apiMap[p.id]]);
@@ -497,9 +518,9 @@ function checkPrayerReminder(){
       if(task&&!task.done){
         const el=document.getElementById('prayRemind');
         if(el&&!el.classList.contains('on')){
-          playAdhan();
           document.getElementById('prayRemindTxt').textContent=`🕌 وقت صلاة ${p.name} — هل صليت؟`;
           el.classList.add('on');
+          el.dataset.prayerId = p.id;
         }
         return;
       }
@@ -508,7 +529,10 @@ function checkPrayerReminder(){
 }
 function closePrayRemind(){
   stopAudio();
-  document.getElementById('prayRemind').classList.remove('on');
+  const el = document.getElementById('prayRemind');
+  const pid = el.dataset.prayerId;
+  if(pid) _prayerReminderDismissed[todayKey()+'_'+pid] = true;
+  el.classList.remove('on');
 }
 
 /* ── Task reminders (all timed tasks) ── */
