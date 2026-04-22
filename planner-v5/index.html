@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مخططي اليومي</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مخططي">
+<link rel="apple-touch-icon" href="./icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#060c14">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="screen" id="scLogin">
+  <div class="login-box">
+    <div class="login-logo">🌙</div>
+    <div class="login-title">مخططي اليومي</div>
+    <p class="login-sub">سجّل دخولك بـ اسم مستخدم وكلمة مرور<br>كل شخص له جدوله الخاص المحفوظ</p>
+
+    <div class="login-tabs">
+      <button class="ltab on" id="ltLogin" onclick="switchLogin('login')">تسجيل الدخول</button>
+      <button class="ltab"    id="ltReg"   onclick="switchLogin('reg')">حساب جديد</button>
+    </div>
+
+    <div id="loginErr" class="login-err"></div>
+
+    <div id="formLogin">
+      <label class="field-lbl">اسم المستخدم</label>
+      <input class="field-inp" id="lUser" placeholder="مثال: hossam" autocomplete="username"/>
+      <label class="field-lbl">كلمة المرور</label>
+      <input class="field-inp" id="lPass" type="password" placeholder="كلمة مرورك السرية" autocomplete="current-password"/>
+      <button class="btn-main" id="btnLogin" onclick="doLogin()">دخول ←</button>
+    </div>
+
+    <div id="formReg" style="display:none">
+      <label class="field-lbl">اسم المستخدم (بالإنجليزي)</label>
+      <input class="field-inp" id="rUser" placeholder="مثال: hossam" autocomplete="username"/>
+      <label class="field-lbl">اسمك الكريم</label>
+      <input class="field-inp" id="rName" placeholder="مثال: حسام"/>
+      <label class="field-lbl">كلمة المرور</label>
+      <input class="field-inp" id="rPass" type="password" placeholder="اختار كلمة مرور" autocomplete="new-password"/>
+      <div class="gender-row">
+        <button class="g-btn on" id="gM" onclick="setG('m')">👦 ولد</button>
+        <button class="g-btn"    id="gF" onclick="setG('f')">👧 بنت</button>
+      </div>
+      <button class="btn-main" id="btnReg" onclick="doRegister()">إنشاء الحساب ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div class="screen" id="scApp">
+  <div style="max-width:860px;margin:0 auto">
+
+
+
+    <!-- Header -->
+    <div class="hdr">
+      <div class="hdr-bsm">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+      <div class="hdr-greet" id="greeting" onclick="openEditName()">أهلاً...</div>
+      <div class="hdr-ayah" id="hdrAyah"><span id="hdrAyahSrc"></span></div>
+      <div class="hdr-row">
+        <div class="chip" id="datePill">📅 ...</div>
+        <div class="chip chip-gold" id="progPill">⏳ 0%</div>
+        <div class="chip chip-gold" id="btnShowModalInstall" onclick="document.getElementById('pwaInstallModal').style.display='flex'">تثبيت 📱</div>
+        <div class="chip chip-logout" onclick="logout()">خروج 🔓</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab on"  onclick="tab('today',this)">📋 اليوم</button>
+      <button class="tab"     onclick="tab('wird',this)">📿 الورد</button>
+      <button class="tab"     onclick="tab('week',this)">🗓️ الأسبوع</button>
+      <button class="tab"     onclick="tab('prog',this)">📊 الإنجاز</button>
+      <button class="tab"     onclick="tab('year',this)">🎯 السنة</button>
+      <button class="tab"     onclick="tab('hist',this)">📜 الأرشيف</button>
+    </div>
+
+    <!-- ── TODAY ── -->
+    <div class="page on" id="page-today">
+
+      <!-- Prayer reminder -->
+      <div class="pray-remind" id="prayRemind">
+        <span style="font-size:1.1rem">🕌</span>
+        <div class="pray-remind-txt" id="prayRemindTxt">تذكير الصلاة</div>
+        <button class="pray-remind-close" onclick="closePrayRemind()">✕</button>
+      </div>
+
+      <!-- Motivation -->
+      <div class="mot">
+        <div class="mot-ico" id="motIco">🌟</div>
+        <div>
+          <div class="mot-txt" id="motTxt">يوم جديد ونعمة جديدة.</div>
+          <div class="mot-sub" id="motSub">ابدأ باسم الله وستجد البركة في كل خطوة</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="sDone" style="color:var(--gold2)">0</div><div class="stat-l">مكتمل ✓</div></div>
+        <div class="stat"><div class="stat-n" id="sLeft" style="color:var(--sap)">0</div><div class="stat-l">متبقي</div></div>
+        <div class="stat"><div class="stat-n" id="sPct"  style="color:var(--em)">0%</div><div class="stat-l">إنجاز</div></div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <button class="filt on"  onclick="setFilter('all',this)">الكل</button>
+        <button class="filt high" onclick="setFilter('high',this)">🔴 عاجل</button>
+        <button class="filt med"  onclick="setFilter('med',this)">🟡 مهم</button>
+        <button class="filt low"  onclick="setFilter('low',this)">🟢 عادي</button>
+      </div>
+
+      <div id="taskList"></div>
+
+      <!-- Add task -->
+      <div class="add-area">
+        <div class="add-area-ttl">➕ إضافة مهمة</div>
+        <input class="add-inp" id="addName" placeholder="اسم المهمة..."/>
+        <input class="add-inp" id="addTime" placeholder="الوقت (مثال: 3:00 م) — اختياري" style="margin-bottom:10px"/>
+        <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:7px">مستوى الأولوية:</div>
+        <div class="pri-sel">
+          <button class="psb h" id="pb-h" onclick="setPri('high')">🔴 عاجل</button>
+          <button class="psb m on" id="pb-m" onclick="setPri('med')">🟡 مهم</button>
+          <button class="psb l" id="pb-l" onclick="setPri('low')">🟢 عادي</button>
+        </div>
+        <div class="add-row">
+          <input class="add-inp" id="addNote" placeholder="ملاحظة (اختياري)..." style="margin-bottom:0;flex:1"/>
+          <button class="btn-add" onclick="addTask()">إضافة</button>
+        </div>
+      </div>
+
+      <div class="reset-row">
+        <button class="btn-reset" onclick="resetDay()">🔄 إعادة ضبط اليوم</button>
+      </div>
+
+      <div style="display:flex;justify-content:center;margin-top:10px">
+        <button class="btn-print" onclick="window.print()">🖨️ طباعة / تصدير اليوم</button>
+      </div>
+    </div>
+
+    <!-- ── WIRD ── -->
+    <div class="page" id="page-wird">
+      <button onclick="openQuranReader()" style="width:100%; padding:14px; background:linear-gradient(135deg, var(--gold2), var(--gold)); border:none; border-radius:12px; color:#000; font-family:'Tajawal', sans-serif; font-size:1.1rem; font-weight:900; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 20px rgba(200,168,75,0.15);">📖 فتح المصحف وقراءة الورد</button>\n        <div class="ayah-card">
+        <div class="ayah-ar" id="ayahTxt">...</div>
+        <div class="ayah-src" id="ayahSrc"></div>
+        <button class="ayah-next" onclick="nextAyah()">↻ اقتباس آخر</button>
+      </div>
+      <div class="slbl">ورد الصباح — بعد الفجر</div>
+      <div class="wird-card" id="wcFajr"></div>
+      <div class="slbl">الصلوات الخمس</div>
+      <div class="wird-card" id="wcPrayers"></div>
+      <div class="slbl">ورد المساء — بعد العصر</div>
+      <div class="wird-card" id="wcEvening"></div>
+    </div>
+
+    <!-- ── WEEK ── -->
+    <div class="page" id="page-week">
+      <div class="slbl">المحاضرات الأسبوعية (ثابت)</div>
+      <div class="week-wrap"><table class="week-tbl" id="weekTbl"></table></div>
+      
+      <div class="slbl" style="margin-top:22px; display:flex; justify-content:space-between; align-items:center;">
+        روتين شخصي متكرر
+        <button style="background:var(--gold);color:#000;border:none;border-radius:4px;padding:4px 8px;font-size:0.7rem;cursor:pointer;font-weight:bold" onclick="toggleRoutineForms()">+ إضافة</button>
+      </div>
+
+      <div id="addRoutineForm" style="display:none; background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r); padding:10px; margin-bottom:10px;">
+        <input type="text" id="rtName" placeholder="اسم المهمة/الروتين..." class="add-inp" style="width:100%"/>
+        <div style="display:flex; gap:6px; margin-bottom:8px; overflow-x:auto;">
+          <label><input type="checkbox" class="rt-day" value="0"> ح</label>
+          <label><input type="checkbox" class="rt-day" value="1"> ن</label>
+          <label><input type="checkbox" class="rt-day" value="2"> ث</label>
+          <label><input type="checkbox" class="rt-day" value="3"> ر</label>
+          <label><input type="checkbox" class="rt-day" value="4"> خ</label>
+          <label><input type="checkbox" class="rt-day" value="5"> ج</label>
+          <label><input type="checkbox" class="rt-day" value="6"> س</label>
+        </div>
+        <button class="btn-add" onclick="addRoutine()" style="width:100%">حفظ في الروتين</button>
+      </div>
+
+      <div id="routineList"></div>
+    </div>
+
+    <!-- ── PROGRESS ── -->
+    <div class="page" id="page-prog">
+      <div class="ring-wrap">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center">
+          <svg class="ring-svg" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#c8a84b"/>
+                <stop offset="100%" stop-color="#f4dda0"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="50" cy="50" r="45"/>
+            <circle class="ring-el" id="ringEl" cx="50" cy="50" r="45" stroke-dashoffset="283"/>
+          </svg>
+          <div class="ring-pct" id="ringPct">0%</div>
+        </div>
+        <div class="ring-msg" id="ringMsg">ابدأ يومك باسم الله 🌙</div>
+      </div>
+      <div class="slbl">سجل آخر ٧ أيام</div>
+      <div class="streak-row" id="streakRow"></div>
+      <div class="slbl">إحصائيات</div>
+      <div class="stats" style="margin-bottom:0">
+        <div class="stat"><div class="stat-n" id="wkT" style="color:var(--gold2)">—</div><div class="stat-l">مهمة منجزة</div></div>
+        <div class="stat"><div class="stat-n" id="wkS" style="color:var(--em)">—</div><div class="stat-l">أيام 🔥</div></div>
+        <div class="stat"><div class="stat-n" id="wkA" style="color:var(--sap)">—</div><div class="stat-l">متوسط %</div></div>
+      </div>
+    </div>
+
+    <!-- ── YEARLY PLAN ── -->
+    <div class="page" id="page-year">
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:20px;text-align:center">
+        <h2 style="margin:0 0 10px;color:var(--gold)">خطة السنة 🎯</h2>
+        <p style="font-size:0.8rem;color:var(--t2);margin:0;line-height:1.5">خطط لمجالات حياتك وقسّم أهدافك الكبيرة لخطوات وإنجازات.</p>
+        <div style="margin-top:10px;font-size:1.2rem;font-weight:900;color:var(--em)" id="ypOverallPct">0% إنجاز كلي</div>
+      </div>
+      
+      <div class="add-area">
+        <div style="display:flex;gap:6px">
+          <select id="ypAddCat" class="add-inp" style="flex:1;max-width:120px;margin-bottom:0">
+            <option value="دين">🕌 دين</option>
+            <option value="عمل">💼 عمل/دراسة</option>
+            <option value="صحة">🏃 صحة</option>
+            <option value="مهارات">🌟 مهارات</option>
+          </select>
+          <input class="add-inp" id="ypAddTxt" placeholder="اكتب الهدف..." style="flex:2;margin-bottom:0"/>
+          <button class="btn-add" onclick="addYpItem()">إضافة</button>
+        </div>
+      </div>
+
+      <div id="ypContainer"></div>
+    </div>
+
+    <!-- ── HISTORY ── -->
+    <div class="page" id="page-hist">
+       <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:20px;text-align:center">
+        <h2 style="margin:0 0 10px;color:var(--gold)">سجل الأيام السابقة 📜</h2>
+        <p style="font-size:0.8rem;color:var(--t2);margin:0;line-height:1.5">الأيام اللي عملت فيها مهام أو دست على (إعادة ضبط لليوم) بتتحفظ هنا.</p>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:20px;">
+        <canvas id="histChart" style="width: 100%; height: 200px;"></canvas>
+      </div>
+      
+      <div id="histContainer"></div>
+      </div>
+  
+      <!-- Developer Credit -->
+      <div style="text-align:center; padding: 25px 10px 15px; margin-top:20px; border-top:1px solid var(--bdr); font-family:'Tajawal', sans-serif; opacity:0.85">
+        <p style="font-size:0.75rem; color:var(--t2); margin-bottom:6px; font-weight:600">تطوير وتصميم</p>
+        <p style="font-size:1.05rem; color:var(--gold); font-weight:900; letter-spacing:0.5px">حسام طرفاية</p>
+      </div>
+
+    </div>
+  </div>
+
+<!-- ══ POMODORO OVERLAY ══ -->
+<div class="pomo-overlay" id="pomoOverlay">
+  <div class="pomo-box">
+    <div style="font-size:.75rem;font-weight:700;color:var(--t2);margin-bottom:10px">⏱️ وضع التركيز</div>
+    <div class="pomo-task-name" id="pomoTaskName">...</div>
+    <div class="pomo-ring">
+      <svg class="pomo-svg" viewBox="0 0 170 170">
+        <defs>
+          <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#c8a84b"/>
+            <stop offset="100%" stop-color="#f4dda0"/>
+          </linearGradient>
+        </defs>
+        <circle class="pomo-track" cx="85" cy="85" r="80"/>
+        <circle class="pomo-fill" id="pomoFill" cx="85" cy="85" r="80"/>
+      </svg>
+      <div class="pomo-time" id="pomoTime">25:00</div>
+    </div>
+    <div class="pomo-lbl" id="pomoLbl">اضغط ابدأ للتركيز ٢٥ دقيقة</div>
+    <div class="pomo-btns">
+      <button class="pomo-btn start" id="pomoBtnStart" onclick="pomoToggle()">▶ ابدأ</button>
+      <button class="pomo-btn stop"  onclick="pomoClose()">✕ إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ EDIT NAME MODAL ══ -->
+<div class="pomo-overlay" id="editNameOverlay">
+  <div class="pomo-box" style="text-align:right">
+    <div style="font-size:1.1rem;font-weight:800;color:var(--gold2);margin-bottom:12px">✏️ تعديل اسمك</div>
+    <label class="field-lbl">اسمك الكريم</label>
+    <input class="field-inp" id="editNameInp" placeholder="اسمك..."/>
+    <div class="gender-row">
+      <button class="g-btn" id="enGM" onclick="setEditG('m')">👦 ولد</button>
+      <button class="g-btn" id="enGF" onclick="setEditG('f')">👧 بنت</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn-main" onclick="saveEditName()" style="flex:1">حفظ</button>
+      <button class="pomo-btn" onclick="closeEditName()" style="flex:1">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
+
+<!-- PWA Install Modal -->
+<div class="pomo-overlay" id="pwaInstallModal" style="display:none; z-index:9999;">
+  <div style="position:relative; width:90%; max-width:360px; background:#111823; border:1px solid rgba(200,168,75,.2); border-radius:24px; padding:30px 20px; text-align:center; box-shadow:0 15px 40px rgba(0,0,0,0.6), 0 0 30px rgba(200,168,75,0.1); animation: fadeUp 0.3s ease">
+    
+    <button onclick="document.getElementById('pwaInstallModal').style.display='none'" style="position:absolute; top:15px; left:15px; width:30px; height:30px; border-radius:50%; background:transparent; border:2px solid #8997aa; color:#8997aa; font-size:1.1rem; line-height:26px; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
+    
+    <div style="width:75px; height:75px; margin:0 auto 20px; border-radius:20px; background:#162030; display:flex; align-items:center; justify-content:center; box-shadow:0 0 25px rgba(200,168,75,0.4); border:2px solid var(--gold);">
+      <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="var(--gold2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    
+    <h2 style="font-size:1.4rem; font-weight:900; color:#fff; margin-bottom:8px">تثبيت التطبيق</h2>
+    <p style="font-size:0.85rem; color:#8997aa; margin-bottom:28px; line-height:1.6">ثبّت التطبيق على جهازك للوصول السريع وتجربة أفضل</p>
+    
+    <div style="text-align:right; margin-bottom:28px; padding-right:10px">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px">
+        <div style="width:36px; height:36px; border-radius:50%; background:rgba(74,159,255,0.1); display:flex; align-items:center; justify-content:center; color:#4a9fff;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+        </div>
+        <span style="font-size:0.85rem; font-weight:700; color:#e6dcc8">وصول سريع من الشاشة الرئيسية</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px">
+        <div style="width:36px; height:36px; border-radius:50%; background:rgba(46,201,138,0.1); display:flex; align-items:center; justify-content:center; color:#2ec98a;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </div>
+        <span style="font-size:0.85rem; font-weight:700; color:#e6dcc8">يعمل بدون انترنت</span>
+      </div>
+    </div>
+
+    <button onclick="installPWA()" style="width:100%; padding:14px; background:linear-gradient(135deg, #a66cf5, #6c46e3); border:none; border-radius:12px; color:#fff; font-family:'Tajawal', sans-serif; font-size:1rem; font-weight:800; cursor:pointer; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:10px; transition: opacity .2s">
+      تثبيت التطبيق
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+    </button>
+    <button onclick="document.getElementById('pwaInstallModal').style.display='none'" style="background:none; border:none; color:#8997aa; font-family:'Tajawal', sans-serif; font-size:0.85rem; font-weight:700; cursor:pointer; padding:8px; opacity:0.8">التثبيت لاحقاً</button>
+  </div>
+</div>
+
+
+<!--  Wird Welcome Modal  -->
+<div class="pomo-overlay" id="wirdWelcomeModal" style="display:none; z-index:9999;">
+  <div style="position:relative; width:90%; max-width:340px; background:#111823; border:1px solid rgba(200,168,75,.3); border-radius:24px; padding:35px 20px 25px; text-align:center; box-shadow:0 15px 40px rgba(0,0,0,0.6), 0 0 30px rgba(200,168,75,0.15); animation: fadeUp 0.4s cubic-bezier(.34,1.56,.64,1)">
+    <div style="width:70px; height:70px; margin:0 auto 15px; border-radius:50%; background:rgba(200,168,75,0.05); display:flex; align-items:center; justify-content:center; border:1.5px solid var(--gold);">
+      <span style="font-size:2.2rem">📖</span>
+    </div>
+    <h2 style="font-size:1.4rem; font-weight:900; color:var(--gold2); margin-bottom:10px">بداية جديدة بالقرآن!</h2>
+    <p style="font-size:0.9rem; color:#8997aa; margin-bottom:25px; line-height:1.7; font-weight:600">لا تنسَ أن تبدأ يومك بوردك القرآني وأذكارك، ففيهما البركة والتوفيق لجميع مهامك.</p>
+    
+    <button onclick="document.getElementById('wirdWelcomeModal').style.display='none'; openQuranReader()" style="width:100%; padding:14px; background:linear-gradient(135deg, var(--gold2), var(--gold)); border:none; border-radius:12px; color:#000; font-family:'Tajawal', sans-serif; font-size:1.05rem; font-weight:900; cursor:pointer;">
+      ابدأ وردك الآن 🤲
+    </button>
+    <button onclick="document.getElementById('wirdWelcomeModal').style.display='none'" style="background:none; border:none; color:#8997aa; font-family:'Tajawal', sans-serif; font-size:0.85rem; font-weight:700; cursor:pointer; padding:15px 10px 0; margin-top:5px; opacity:0.8">تخطي مؤقتاً</button>
+  </div>
+</div>
+<!--  QURAN READER OVERLAY  -->\n
+<!--  QURAN READER OVERLAY  -->
+
+  
+  <!-- Quran Index Modal -->
+  <div id="quranIndexModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:20000; flex-direction:column;">
+    <div style="padding:calc(15px + env(safe-area-inset-top)) 15px 15px 15px; border-bottom:1px solid var(--bdr); display:flex; justify-content:space-between; align-items:center; background:var(--s2);">
+      <button onclick="toggleQuranIndex()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+      <div style="font-weight:800; color:var(--t1); font-size:1.2rem;">الفهرس</div>
+      <div style="width:24px;"></div>
+    </div>
+    
+    <!-- Tabs -->
+    <div style="display:flex; padding:15px; gap:10px; background:var(--s2);">
+      <button id="tabSurahsBtn" onclick="switchQuranIndexTab('surahs')" class="quran-tab active" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">السور</button>
+      <button id="tabJuzsBtn" onclick="switchQuranIndexTab('juzs')" class="quran-tab" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">الأجزاء</button>
+    </div>
+    
+    <!-- List Container -->
+    <div id="quranIndexList" style="flex:1; overflow-y:auto; padding:15px; padding-bottom:env(safe-area-inset-bottom);"></div>
+  </div>
+</div>
+
+
+<!--  QURAN READER OVERLAY  -->
+<div class="quran-overlay" id="quranOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:10000; flex-direction:column;">
+  
+  <div class="quran-header" style="background:var(--s2); display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--bdr); padding:calc(10px + env(safe-area-inset-top)) 15px 10px 15px;">
+    <!-- Index Button -->
+    <button onclick="toggleQuranIndex()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;">
+      <i class="fas fa-list-ul"></i>
+    </button>
+    
+    <!-- Title Info -->
+    <div style="text-align:center;">
+      <div id="quranHeaderSurah" style="font-weight:800; color:var(--t1); font-size:1.1rem; font-family:'Tajawal', sans-serif;">سورة الفاتحة</div>
+      <div id="quranHeaderJuz" style="color:var(--gold); font-size:0.8rem; font-weight:600;">الجزء الأول</div>
+    </div>
+    
+    <!-- Close Button -->
+    <button onclick="closeQuranReader()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative; display:flex; justify-content:center; align-items:center; background:var(--bg); touch-action: pan-y;" id="quranImgContainer">
+    <div id="quranLoader" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--gold); font-size:1.2rem; font-weight:700;">جاري التحميل...</div>
+    <img id="quranPageImg" src="" style="width:100%; max-width:600px; height:auto; opacity:0; transition:opacity 0.3s;" alt="Quran Page">
+    <!-- Tap Zones -->
+    <div onclick="changeQuranPage(1)" style="position:absolute; left:0; top:0; width:50%; height:100%; cursor:pointer; z-index:10;"></div>
+    <div onclick="changeQuranPage(-1)" style="position:absolute; right:0; top:0; width:50%; height:100%; cursor:pointer; z-index:10;"></div>
+  </div>
+
+  <div class="quran-footer" style="background:var(--s2); border-top:1px solid var(--bdr); padding-bottom:env(safe-area-inset-bottom);">
+    <!-- Reader controls -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px;">
+      <button onclick="changeQuranPage(1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:8px 15px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">التالي »</button>
+      <div id="quranPageNum" style="color:var(--gold); font-weight:800; font-size:1rem; background:var(--golddim); padding:4px 15px; border-radius:20px;">صفحة 1</div>
+      <button onclick="changeQuranPage(-1)" style="background:rgba(255,255,255,0.05); border:1px solid var(--bdr); border-radius:8px; padding:8px 15px; color:var(--t1); font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer; z-index:20;">« السابق</button>
+    </div>
+    
+    <!-- Bottom Nav Icons -->
+    <div class="quran-bottom-nav" style="display:flex; justify-content:space-around; align-items:center; padding:10px 5px; border-top:1px solid rgba(255,255,255,0.05);">
+      <div onclick="toggleQuranIndex()" class="nav-item active"><i class="fas fa-book-open"></i><span>الفهرس</span></div>
+      <div class="nav-item"><i class="fas fa-check-double"></i><span>الختمة</span></div>
+      <div class="nav-item"><i class="fas fa-bookmark"></i><span>العلامات</span></div>
+      <div class="nav-item"><i class="fas fa-star"></i><span>المفضلة</span></div>
+      <div class="nav-item"><i class="fas fa-pen"></i><span>ملاحظات</span></div>
+    </div>
+  </div>
+  
+  <!-- Quran Index Modal -->
+  <div id="quranIndexModal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:20000; flex-direction:column;">
+    <div style="padding:calc(15px + env(safe-area-inset-top)) 15px 15px 15px; border-bottom:1px solid var(--bdr); display:flex; justify-content:space-between; align-items:center; background:var(--s2);">
+      <button onclick="toggleQuranIndex()" style="background:transparent; border:none; color:var(--t2); font-size:1.4rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+      <div style="font-weight:800; color:var(--t1); font-size:1.2rem;">الفهرس</div>
+      <div style="width:24px;"></div>
+    </div>
+    
+    <!-- Tabs -->
+    <div style="display:flex; padding:15px; gap:10px; background:var(--s2);">
+      <button id="tabSurahsBtn" onclick="switchQuranIndexTab('surahs')" class="quran-tab active" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">السور</button>
+      <button id="tabJuzsBtn" onclick="switchQuranIndexTab('juzs')" class="quran-tab" style="flex:1; padding:10px; border-radius:8px; border:none; font-family:'Tajawal', sans-serif; font-weight:700; cursor:pointer;">الأجزاء</button>
+    </div>
+    
+    <!-- List Container -->
+    <div id="quranIndexList" style="flex:1; overflow-y:auto; padding:15px; padding-bottom:env(safe-area-inset-bottom);"></div>
+  </div>
+</div>
+
+</body>

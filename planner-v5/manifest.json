@@ -1,0 +1,17 @@
+{
+  "name": "مخططي اليومي",
+  "short_name": "مخططي",
+  "description": "تطبيق لتنظيم مهامك اليومية والورد القرآني بخصوصية وتخزين سحابي.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#060c14",
+  "theme_color": "#c8a84b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
