@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "",
+  "outputDirectory": "planner-v5",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

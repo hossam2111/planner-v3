@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مخططي اليومي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════ */
+:root{
+  --bg:#090f18;
+  --s1:#0f1720;
+  --s2:#162030;
+  --s3:#1d2b3d;
+  --s4:#243348;
+  --bdr:rgba(255,255,255,.06);
+  --bdr2:rgba(255,255,255,.11);
+
+  --gold:#c8a84b;
+  --gold2:#e6c76a;
+  --gold3:#f4dda0;
+  --golddim:rgba(200,168,75,.11);
+  --goldglow:rgba(200,168,75,.18);
+
+  --em:#2ec98a;
+  --emdim:rgba(46,201,138,.1);
+  --sap:#4a9fff;
+  --sapdim:rgba(74,159,255,.1);
+  --rose:#e05c7a;
+  --rosedim:rgba(224,92,122,.1);
+  --amb:#f0a040;
+  --ambdim:rgba(240,160,64,.1);
+
+  --t1:#e6dcc8;
+  --t2:#8997aa;
+  --t3:#3c4d62;
+
+  --r:14px;--rsm:9px;
+  --sh:0 12px 40px rgba(0,0,0,.55);
+  --shg:0 0 30px rgba(200,168,75,.12);
+
+  --pri-high:var(--rose);
+  --pri-med:var(--amb);
+  --pri-low:var(--em);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Tajawal',sans-serif;
+  background:var(--bg);color:var(--t1);
+  min-height:100vh;direction:rtl;overflow-x:hidden;
+}
+
+/* ── Geometric bg ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='none' stroke='rgba(200,168,75,.03)' stroke-width='1'%3E%3Cpolygon points='80,6 150,44 150,116 80,154 10,116 10,44'/%3E%3Cpolygon points='80,22 134,52 134,108 80,138 26,108 26,52'/%3E%3Cpolygon points='80,40 116,62 116,98 80,120 44,98 44,62'/%3E%3Cline x1='80' y1='6' x2='80' y2='154'/%3E%3Cline x1='10' y1='44' x2='150' y2='116'/%3E%3Cline x1='150' y1='44' x2='10' y2='116'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse 80% 50% at 10% 0%,rgba(200,168,75,.06) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 70% at 90% 100%,rgba(46,201,138,.04) 0%,transparent 55%);
+}
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.screen{position:relative;z-index:1;display:none}
+.screen.on{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════ */
+#scLogin{
+  min-height:100vh;display:none;
+  align-items:center;justify-content:center;padding:24px;
+}
+#scLogin.on{display:flex}
+
+.login-box{
+  width:100%;max-width:400px;
+  background:var(--s1);border:1px solid rgba(200,168,75,.2);
+  border-radius:22px;padding:36px 30px;
+  box-shadow:var(--sh),var(--shg);
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88) translateY(24px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.login-logo{text-align:center;margin-bottom:6px;font-size:2.6rem}
+.login-title{
+  text-align:center;font-size:1.5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--gold3),var(--gold),#9a6f28);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+}
+.login-sub{text-align:center;font-size:.8rem;color:var(--t2);margin-bottom:26px;line-height:1.7}
+
+.login-tabs{display:flex;background:var(--s2);border-radius:var(--rsm);padding:4px;gap:3px;margin-bottom:22px}
+.ltab{flex:1;padding:9px;border-radius:6px;border:none;background:transparent;
+  color:var(--t3);font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s}
+.ltab.on{background:var(--s3);color:var(--gold2);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+.field-lbl{font-size:.75rem;font-weight:700;color:var(--t2);margin-bottom:6px;display:block}
+.field-inp{
+  width:100%;background:var(--bg);border:2px solid var(--bdr);
+  border-radius:var(--rsm);padding:12px 15px;
+  font-family:'Tajawal',sans-serif;font-size:.9rem;font-weight:600;
+  color:var(--t1);direction:rtl;outline:none;
+  transition:border-color .2s;margin-bottom:14px;
+}
+.field-inp:focus{border-color:var(--gold)}
+.field-inp::placeholder{color:var(--t3)}
+
+.gender-row{display:flex;gap:8px;margin-bottom:14px}
+.g-btn{
+  flex:1;padding:10px;border-radius:var(--rsm);
+  border:2px solid var(--bdr);background:var(--s2);
+  color:var(--t2);font-family:'Tajawal',sans-serif;
+  font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.g-btn.on{border-color:var(--gold);background:var(--golddim);color:var(--gold2)}
+
+.btn-main{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,var(--gold2),var(--gold),#9a6f28);
+  border:none;border-radius:var(--rsm);
+  font-family:'Tajawal',sans-serif;font-size:.95rem;font-weight:900;
+  color:#060c14;cursor:pointer;transition:opacity .2s,transform .1s;
+  margin-top:4px;
+}
+.btn-main:hover{opacity:.9}.btn-main:active{transform:scale(.98)}
+
+.login-err{
+  background:var(--rosedim);border:1px solid rgba(224,92,122,.25);
+  border-radius:var(--rsm);padding:9px 13px;
+  font-size:.8rem;color:var(--rose);font-weight:700;
+  margin-bottom:14px;display:none;
+}
+.login-err.on{display:block}
+
+/* ══════════════════════════════════════
+   APP SCREEN
+══════════════════════════════════════ */
+#scApp{padding:0 16px 100px}
+
+/* Header */
+.hdr{text-align:center;padding:38px 16px 22px}
+.hdr-bsm{font-family:'Noto Naskh Arabic',serif;font-size:.85rem;color:var(--gold);opacity:.7;letter-spacing:.1em;margin-bottom:9px}
+.hdr-greet{
+  font-size:clamp(1.5rem,5vw,2.3rem);font-weight:900;line-height:1.1;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold3),var(--gold),#9a6f28);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:inline-block;
+}
+.hdr-greet:hover{opacity:.85}
+.hdr-ayah{
+  font-family:'Noto Naskh Arabic',serif;font-size:.8rem;
+  color:var(--t2);margin-top:10px;line-height:1.9;
+  max-width:440px;margin-inline:auto;
+  padding:9px 16px;border-radius:30px;
+  background:rgba(255,255,255,.02);border:1px solid var(--bdr);
+}
+.hdr-ayah span{color:var(--gold);opacity:.65;font-size:.68rem;display:block;margin-top:1px}
+
+.hdr-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.chip{background:var(--s2);border:1px solid var(--bdr);border-radius:20px;padding:5px 14px;font-size:.73rem;color:var(--t2);font-weight:600}
+.chip-gold{background:var(--golddim);border-color:rgba(200,168,75,.22);color:var(--gold2);font-weight:700}
+.chip-logout{cursor:pointer;transition:all .2s}
+.chip-logout:hover{background:var(--rosedim);border-color:var(--rose);color:var(--rose)}
+
+/* Tabs */
+.tabs{display:flex;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:5px;margin:10px 0 22px;gap:3px}
+.tab{flex:1;padding:9px 4px;border-radius:var(--rsm);border:none;background:transparent;color:var(--t3);font-family:'Tajawal',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
+.tab.on{background:var(--s3);color:var(--gold2);box-shadow:0 2px 10px rgba(0,0,0,.35)}
+
+/* Pages */
+.page{display:none}
+.page.on{display:block;animation:fadeUp .3s ease}
+
+/* Section label */
+.slbl{display:flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin:20px 0 9px}
+.slbl::before{content:'';width:3px;height:13px;background:var(--gold);border-radius:2px;flex-shrink:0}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 10px;text-align:center}
+.stat-n{font-size:1.7rem;font-weight:900;line-height:1}
+.stat-l{font-size:.66rem;color:var(--t2);font-weight:600;margin-top:3px}
+
+/* Motivation banner */
+.mot{
+  background:linear-gradient(135deg,rgba(200,168,75,.09),rgba(200,168,75,.02));
+  border:1px solid rgba(200,168,75,.2);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:16px;
+  display:flex;gap:12px;align-items:flex-start;
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{box-shadow:none}50%{box-shadow:0 0 22px rgba(200,168,75,.07)}}
+.mot-ico{font-size:1.4rem;flex-shrink:0;margin-top:1px}
+.mot-txt{font-size:.85rem;font-weight:700;line-height:1.55;color:var(--gold2)}
+.mot-sub{font-size:.72rem;color:var(--t2);margin-top:2px;font-weight:500;font-family:'Noto Naskh Arabic',serif}
+
+/* Prayer reminder */
+.pray-remind{
+  background:var(--emdim);border:1px solid rgba(46,201,138,.2);
+  border-radius:var(--r);padding:12px 16px;margin-bottom:16px;
+  display:none;align-items:center;gap:10px;
+}
+.pray-remind.on{display:flex}
+.pray-remind-txt{font-size:.83rem;font-weight:700;color:var(--em);flex:1}
+.pray-remind-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:4px;transition:color .2s}
+.pray-remind-close:hover{color:var(--em)}
+
+/* Priority filter */
+.filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.filt{
+  padding:5px 12px;border-radius:20px;border:1px solid var(--bdr);
+  background:var(--s1);color:var(--t2);font-family:'Tajawal',sans-serif;
+  font-size:.73rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.filt.on{border-color:var(--gold);background:var(--golddim);color:var(--gold2)}
+.filt.high.on{border-color:var(--rose);background:var(--rosedim);color:var(--rose)}
+.filt.med.on{border-color:var(--amb);background:var(--ambdim);color:var(--amb)}
+.filt.low.on{border-color:var(--em);background:var(--emdim);color:var(--em)}
+
+/* Task card */
+.task{
+  background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:14px 15px;margin-bottom:7px;
+  transition:border-color .2s,background .2s,transform .15s;
+  position:relative;overflow:hidden;
+}
+.task::before{
+  content:'';position:absolute;right:0;top:0;bottom:0;
+  width:3px;border-radius:0 var(--r) var(--r) 0;background:transparent;transition:background .2s;
+}
+.task.high::before{background:var(--rose)}
+.task.med::before{background:var(--amb)}
+.task.low::before{background:var(--em)}
+.task:hover{background:var(--s2);transform:translateX(-2px)}
+.task.done{opacity:.5}
+.task.done .t-name{text-decoration:line-through;color:var(--t2)}
+
+.task-top{display:flex;align-items:flex-start;gap:11px;cursor:pointer}
+.chk{
+  width:21px;height:21px;border-radius:6px;border:2px solid var(--t3);
+  flex-shrink:0;margin-top:2px;display:flex;align-items:center;
+  justify-content:center;font-size:.72rem;font-weight:900;transition:all .2s;
+}
+.task.done .chk{background:var(--em);border-color:var(--em);color:#060c14}
+
+.t-body{flex:1;min-width:0}
+.t-name{font-size:.87rem;font-weight:700;line-height:1.4}
+.t-meta{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.t-time{font-size:.68rem;color:var(--sap);font-weight:700}
+.t-tag{font-size:.63rem;font-weight:800;padding:2px 8px;border-radius:20px}
+.t-pri{font-size:.63rem;font-weight:800;padding:2px 8px;border-radius:20px}
+.pri-high{background:var(--rosedim);color:var(--rose)}
+.pri-med{background:var(--ambdim);color:var(--amb)}
+.pri-low{background:var(--emdim);color:var(--em)}
+
+/* tag colors */
+.tp{background:var(--emdim);color:var(--em)}
+.tq{background:var(--ambdim);color:var(--amb)}
+.tw{background:var(--sapdim);color:var(--sap)}
+.ts{background:rgba(167,139,250,.12);color:#b8a5f0}
+.tc{background:var(--golddim);color:var(--gold2)}
+.tr{background:var(--rosedim);color:var(--rose)}
+.th{background:var(--emdim);color:#7fe8c0}
+.tf{background:rgba(255,255,255,.04);color:var(--t2)}
+
+/* Task action row */
+.task-actions{
+  display:flex;gap:6px;margin-top:0;max-height:0;overflow:hidden;
+  transition:max-height .3s ease,margin-top .3s ease;
+}
+.task-actions.on{max-height:200px;margin-top:10px}
+
+.act-btn{
+  background:var(--s3);border:1px solid var(--bdr2);border-radius:var(--rsm);
+  padding:5px 10px;font-family:'Tajawal',sans-serif;font-size:.7rem;
+  font-weight:700;color:var(--t2);cursor:pointer;transition:all .2s;
+}
+.act-btn:hover{background:var(--s4);color:var(--t1)}
+.act-btn.gold:hover{background:var(--golddim);color:var(--gold2);border-color:rgba(200,168,75,.3)}
+.act-btn.danger:hover{background:var(--rosedim);color:var(--rose);border-color:rgba(224,92,122,.3)}
+
+.t-note-inp{
+  width:100%;background:var(--bg);border:1px solid var(--bdr2);
+  border-radius:var(--rsm);padding:8px 12px;
+  font-family:'Tajawal',sans-serif;font-size:.8rem;color:var(--t1);
+  direction:rtl;outline:none;resize:none;
+  transition:border-color .2s;margin-top:8px;
+}
+.t-note-inp:focus{border-color:rgba(200,168,75,.4)}
+.t-note-inp::placeholder{color:var(--t3)}
+.t-note-show{font-size:.75rem;color:var(--t2);margin-top:6px;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--rsm);border-right:2px solid var(--gold);line-height:1.5}
+
+/* Edit inline */
+.edit-row{display:none;gap:7px;margin-top:9px}
+.edit-row.on{display:flex}
+.edit-inp{flex:1;background:var(--bg);border:1px solid var(--gold);border-radius:var(--rsm);padding:7px 12px;font-family:'Tajawal',sans-serif;font-size:.83rem;color:var(--t1);direction:rtl;outline:none}
+.btn-save{background:var(--gold);color:#060c14;border:none;border-radius:var(--rsm);padding:7px 14px;font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:900;cursor:pointer}
+
+/* Priority selector in add form */
+.pri-sel{display:flex;gap:6px;margin-bottom:0}
+.psb{
+  flex:1;padding:7px 6px;border-radius:var(--rsm);border:2px solid var(--bdr);
+  background:var(--s2);color:var(--t2);font-family:'Tajawal',sans-serif;
+  font-size:.72rem;font-weight:800;cursor:pointer;transition:all .2s;text-align:center;
+}
+.psb.on.h{border-color:var(--rose);background:var(--rosedim);color:var(--rose)}
+.psb.on.m{border-color:var(--amb);background:var(--ambdim);color:var(--amb)}
+.psb.on.l{border-color:var(--em);background:var(--emdim);color:var(--em)}
+
+/* Add task area */
+.add-area{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;margin-top:14px}
+.add-area-ttl{font-size:.75rem;font-weight:800;color:var(--t2);margin-bottom:10px}
+.add-inp{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rsm);padding:10px 14px;font-family:'Tajawal',sans-serif;font-size:.85rem;color:var(--t1);direction:rtl;outline:none;transition:border-color .2s;margin-bottom:10px}
+.add-inp:focus{border-color:rgba(200,168,75,.4)}
+.add-inp::placeholder{color:var(--t3)}
+.add-row{display:flex;gap:7px;margin-top:10px}
+.btn-add{background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--rsm);padding:10px 18px;color:var(--gold);font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-add:hover{background:var(--golddim);border-color:var(--gold)}
+
+/* Reset */
+.reset-row{display:flex;justify-content:center;margin-top:22px}
+.btn-reset{background:transparent;border:1px solid rgba(224,92,122,.22);border-radius:var(--r);padding:9px 22px;color:rgba(224,92,122,.55);font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-reset:hover{border-color:var(--rose);color:var(--rose);background:var(--rosedim)}
+
+/* ══════════════════════════════════════
+   POMODORO OVERLAY
+══════════════════════════════════════ */
+.pomo-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);
+  z-index:500;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.pomo-overlay.on{display:flex}
+.pomo-box{
+  background:var(--s1);border:1px solid rgba(200,168,75,.2);
+  border-radius:22px;padding:36px 28px;width:100%;max-width:380px;text-align:center;
+  box-shadow:var(--sh),var(--shg);
+}
+.pomo-task-name{font-size:.82rem;color:var(--t2);font-weight:600;margin-bottom:16px;line-height:1.5;padding:8px 16px;background:var(--s2);border-radius:var(--rsm)}
+.pomo-ring{position:relative;width:180px;height:180px;margin:0 auto 20px}
+.pomo-svg{width:180px;height:180px;transform:rotate(-90deg)}
+.pomo-track{fill:none;stroke:rgba(255,255,255,.05);stroke-width:10}
+.pomo-fill{fill:none;stroke:url(#pg);stroke-width:10;stroke-linecap:round;stroke-dasharray:502;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}
+.pomo-time{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:2.4rem;font-weight:900;color:var(--gold2);letter-spacing:-.02em;
+}
+.pomo-lbl{font-size:.8rem;color:var(--t2);font-weight:600;margin-bottom:20px}
+.pomo-btns{display:flex;gap:8px;justify-content:center}
+.pomo-btn{
+  padding:10px 22px;border-radius:var(--rsm);border:1px solid var(--bdr2);
+  background:var(--s2);color:var(--t1);font-family:'Tajawal',sans-serif;
+  font-size:.83rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.pomo-btn.start{background:var(--golddim);border-color:var(--gold);color:var(--gold2)}
+.pomo-btn.stop{background:var(--rosedim);border-color:var(--rose);color:var(--rose)}
+
+/* ══════════════════════════════════════
+   WIRD PAGE
+══════════════════════════════════════ */
+.ayah-card{
+  background:linear-gradient(135deg,rgba(200,168,75,.07),rgba(200,168,75,.02));
+  border:1px solid rgba(200,168,75,.15);border-radius:var(--r);
+  padding:20px 22px;text-align:center;margin-bottom:12px;position:relative;overflow:hidden;
+}
+.ayah-card::before{content:'"';position:absolute;top:-8px;right:14px;font-size:5rem;color:rgba(200,168,75,.07);font-family:serif;line-height:1}
+.ayah-ar{font-family:'Noto Naskh Arabic',serif;font-size:1.05rem;font-weight:600;color:var(--gold3);line-height:2;margin-bottom:8px}
+.ayah-src{font-size:.7rem;color:var(--t2);font-weight:600;background:var(--s2);display:inline-block;padding:3px 12px;border-radius:20px;border:1px solid var(--bdr)}
+.ayah-next{background:transparent;border:none;color:var(--t3);font-size:.73rem;cursor:pointer;margin-top:10px;font-family:'Tajawal',sans-serif;font-weight:700;transition:color .2s;display:block;margin-inline:auto}
+.ayah-next:hover{color:var(--gold)}
+
+.wird-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:17px;margin-bottom:9px}
+.wird-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.wird-ttl{font-size:.88rem;font-weight:800;color:var(--gold2)}
+.wird-pct{font-size:.73rem;color:var(--t2)}
+.wird-bar{height:4px;background:rgba(255,255,255,.05);border-radius:10px;overflow:hidden;margin-bottom:13px}
+.wird-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:10px;transition:width .5s ease}
+.wird-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.wird-item{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.02);border:1px solid var(--bdr);border-radius:var(--rsm);
+  padding:9px 11px;cursor:pointer;transition:all .2s;
+}
+.wird-item:hover{background:rgba(200,168,75,.05)}
+.wird-item.done{background:var(--emdim);border-color:rgba(46,201,138,.2)}
+.wird-chk{width:19px;height:19px;border-radius:50%;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.62rem;font-weight:900;transition:all .2s}
+.wird-item.done .wird-chk{background:var(--em);border-color:var(--em);color:#060c14}
+.wird-txt{font-size:.78rem;font-weight:700;line-height:1.35;flex:1}
+.wird-cnt{font-size:.62rem;color:var(--gold);font-weight:800;background:var(--golddim);padding:2px 7px;border-radius:10px;white-space:nowrap}
+
+/* ══════════════════════════════════════
+   WEEK PAGE
+══════════════════════════════════════ */
+.week-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bdr)}
+.week-tbl{width:100%;border-collapse:collapse;min-width:580px;font-size:.73rem}
+.week-tbl th{background:var(--s2);padding:10px 7px;text-align:center;font-weight:800;color:var(--t2);border-bottom:1px solid var(--bdr);border-left:1px solid var(--bdr)}
+.week-tbl th.td{color:var(--gold2);border-bottom:2px solid var(--gold)}
+.week-tbl td{padding:8px 5px;text-align:center;border-bottom:1px solid var(--bdr);border-left:1px solid var(--bdr)}
+.week-tbl td.td{background:rgba(200,168,75,.03)}
+.wc{border-radius:6px;padding:4px 6px;font-weight:800;display:inline-block;line-height:1.3;font-size:.69rem}
+.wc.wp{background:var(--emdim);color:var(--em)}
+.wc.ww{background:var(--sapdim);color:var(--sap)}
+.wc.ws{background:rgba(167,139,250,.1);color:#b8a5f0}
+.wc.we{background:var(--ambdim);color:var(--amb)}
+.wc.wai{background:var(--rosedim);color:var(--rose)}
+.wc.wb{background:var(--emdim);color:#7ee8c0}
+.wc.wm{background:rgba(167,139,250,.15);color:#c4b5fd}
+.wc.wr{background:var(--golddim);color:var(--gold2)}
+.wc.wf{color:var(--t3)}
+
+/* ══════════════════════════════════════
+   PROGRESS PAGE
+══════════════════════════════════════ */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:22px;margin-bottom:14px}
+.ring-svg{width:120px;height:120px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(255,255,255,.04);stroke-width:10}
+.ring-el{fill:none;stroke:url(#rg);stroke-width:10;stroke-linecap:round;stroke-dasharray:283;transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)}
+.ring-pct{position:absolute;font-size:1.55rem;font-weight:900;color:var(--gold2)}
+.ring-msg{font-size:.83rem;color:var(--t2);font-weight:600;text-align:center}
+.streak-row{display:flex;gap:6px;margin-bottom:14px}
+.s-day{flex:1;min-width:32px;border-radius:var(--rsm);border:1px solid var(--bdr);background:var(--s1);padding:7px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--t3);gap:3px}
+.s-day.ok{background:var(--emdim);border-color:rgba(46,201,138,.25);color:var(--em)}
+.s-day.today{border-color:var(--gold);color:var(--gold2)}
+
+/* ══════════════════════════════════════
+   PRINT STYLES
+══════════════════════════════════════ */
+.btn-print{
+  display:flex;align-items:center;gap:7px;
+  background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r);
+  padding:10px 18px;color:var(--t2);font-family:'Tajawal',sans-serif;
+  font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;
+  margin-top:14px;
+}
+.btn-print:hover{background:var(--sapdim);color:var(--sap);border-color:var(--sap)}
+
+@media print{
+  body{background:white;color:#111}
+  body::before,.tabs,.login-box,.pomo-overlay,.chip-logout,.hdr-row,.add-area,.reset-row,.btn-print,.task-actions,.edit-row{display:none!important}
+  .page{display:block!important}
+  #scApp{padding:0 10px}
+  .hdr{padding:10px}
+  .task{background:white;border:1px solid #ddd;break-inside:avoid}
+  .t-name{color:#111}.t-time{color:#555}.slbl{color:#666}
+  .stat{background:#f5f5f5;border-color:#ddd}
+  .stat-n{color:#111}.stat-l{color:#555}
+}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:22px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--s2);border:1px solid var(--bdr2);
+  border-radius:14px;padding:10px 22px;
+  font-size:.8rem;font-weight:700;color:var(--t1);
+  z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;box-shadow:var(--sh);pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(46,201,138,.4);color:var(--em)}
+.toast.gd{border-color:rgba(200,168,75,.4);color:var(--gold2)}
+.toast.warn{border-color:rgba(224,92,122,.4);color:var(--rose)}
+
+@media(max-width:600px){.hdr-greet{font-size:1.45rem}.wird-grid{grid-template-columns:1fr 1fr}.tab{font-size:.68rem;padding:8px 3px}}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="screen" id="scLogin">
+  <div class="login-box">
+    <div class="login-logo">🌙</div>
+    <div class="login-title">مخططي اليومي</div>
+    <p class="login-sub">سجّل دخولك بـ اسم مستخدم وكلمة مرور<br>كل شخص له جدوله الخاص المحفوظ</p>
+
+    <div class="login-tabs">
+      <button class="ltab on" id="ltLogin" onclick="switchLogin('login')">تسجيل الدخول</button>
+      <button class="ltab"    id="ltReg"   onclick="switchLogin('reg')">حساب جديد</button>
+    </div>
+
+    <div id="loginErr" class="login-err"></div>
+
+    <div id="formLogin">
+      <label class="field-lbl">اسم المستخدم</label>
+      <input class="field-inp" id="lUser" placeholder="مثال: hossam" autocomplete="username"/>
+      <label class="field-lbl">كلمة المرور</label>
+      <input class="field-inp" id="lPass" type="password" placeholder="كلمة مرورك السرية" autocomplete="current-password"/>
+      <button class="btn-main" id="btnLogin" onclick="doLogin()">دخول ←</button>
+    </div>
+
+    <div id="formReg" style="display:none">
+      <label class="field-lbl">اسم المستخدم (بالإنجليزي)</label>
+      <input class="field-inp" id="rUser" placeholder="مثال: hossam" autocomplete="username"/>
+      <label class="field-lbl">اسمك الكريم</label>
+      <input class="field-inp" id="rName" placeholder="مثال: حسام"/>
+      <label class="field-lbl">كلمة المرور</label>
+      <input class="field-inp" id="rPass" type="password" placeholder="اختار كلمة مرور" autocomplete="new-password"/>
+      <div class="gender-row">
+        <button class="g-btn on" id="gM" onclick="setG('m')">👦 ولد</button>
+        <button class="g-btn"    id="gF" onclick="setG('f')">👧 بنت</button>
+      </div>
+      <button class="btn-main" id="btnReg" onclick="doRegister()">إنشاء الحساب ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div class="screen" id="scApp">
+  <div style="max-width:860px;margin:0 auto">
+
+    <!-- Header -->
+    <div class="hdr">
+      <div class="hdr-bsm">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+      <div class="hdr-greet" id="greeting" onclick="openEditName()">أهلاً...</div>
+      <div class="hdr-ayah" id="hdrAyah"><span id="hdrAyahSrc"></span></div>
+      <div class="hdr-row">
+        <div class="chip" id="datePill">📅 ...</div>
+        <div class="chip chip-gold" id="progPill">⏳ 0%</div>
+        <div class="chip chip-logout" onclick="logout()">خروج 🔓</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" style="margin-inline:16px;max-width:828px">
+      <button class="tab on"  onclick="tab('today',this)">📋 اليوم</button>
+      <button class="tab"     onclick="tab('wird',this)">📿 الورد</button>
+      <button class="tab"     onclick="tab('week',this)">🗓️ الأسبوع</button>
+      <button class="tab"     onclick="tab('prog',this)">📊 الإنجاز</button>
+    </div>
+
+    <!-- ── TODAY ── -->
+    <div class="page on" id="page-today">
+
+      <!-- Prayer reminder -->
+      <div class="pray-remind" id="prayRemind">
+        <span style="font-size:1.1rem">🕌</span>
+        <div class="pray-remind-txt" id="prayRemindTxt">تذكير الصلاة</div>
+        <button class="pray-remind-close" onclick="closePrayRemind()">✕</button>
+      </div>
+
+      <!-- Motivation -->
+      <div class="mot">
+        <div class="mot-ico" id="motIco">🌟</div>
+        <div>
+          <div class="mot-txt" id="motTxt">يوم جديد ونعمة جديدة.</div>
+          <div class="mot-sub" id="motSub">ابدأ باسم الله وستجد البركة في كل خطوة</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="sDone" style="color:var(--gold2)">0</div><div class="stat-l">مكتمل ✓</div></div>
+        <div class="stat"><div class="stat-n" id="sLeft" style="color:var(--sap)">0</div><div class="stat-l">متبقي</div></div>
+        <div class="stat"><div class="stat-n" id="sPct"  style="color:var(--em)">0%</div><div class="stat-l">إنجاز</div></div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-row">
+        <button class="filt on"  onclick="setFilter('all',this)">الكل</button>
+        <button class="filt high" onclick="setFilter('high',this)">🔴 عاجل</button>
+        <button class="filt med"  onclick="setFilter('med',this)">🟡 مهم</button>
+        <button class="filt low"  onclick="setFilter('low',this)">🟢 عادي</button>
+      </div>
+
+      <div id="taskList"></div>
+
+      <!-- Add task -->
+      <div class="add-area">
+        <div class="add-area-ttl">➕ إضافة مهمة</div>
+        <input class="add-inp" id="addName" placeholder="اسم المهمة..."/>
+        <input class="add-inp" id="addTime" placeholder="الوقت (مثال: 3:00 م) — اختياري" style="margin-bottom:10px"/>
+        <div style="font-size:.72rem;font-weight:700;color:var(--t2);margin-bottom:7px">مستوى الأولوية:</div>
+        <div class="pri-sel">
+          <button class="psb h" id="pb-h" onclick="setPri('high')">🔴 عاجل</button>
+          <button class="psb m on" id="pb-m" onclick="setPri('med')">🟡 مهم</button>
+          <button class="psb l" id="pb-l" onclick="setPri('low')">🟢 عادي</button>
+        </div>
+        <div class="add-row">
+          <input class="add-inp" id="addNote" placeholder="ملاحظة (اختياري)..." style="margin-bottom:0;flex:1"/>
+          <button class="btn-add" onclick="addTask()">إضافة</button>
+        </div>
+      </div>
+
+      <div class="reset-row">
+        <button class="btn-reset" onclick="resetDay()">🔄 إعادة ضبط اليوم</button>
+      </div>
+
+      <div style="display:flex;justify-content:center;margin-top:10px">
+        <button class="btn-print" onclick="window.print()">🖨️ طباعة / تصدير اليوم</button>
+      </div>
+    </div>
+
+    <!-- ── WIRD ── -->
+    <div class="page" id="page-wird">
+      <div class="ayah-card">
+        <div class="ayah-ar" id="ayahTxt">...</div>
+        <div class="ayah-src" id="ayahSrc"></div>
+        <button class="ayah-next" onclick="nextAyah()">↻ اقتباس آخر</button>
+      </div>
+      <div class="slbl">ورد الصباح — بعد الفجر</div>
+      <div class="wird-card" id="wcFajr"></div>
+      <div class="slbl">الصلوات الخمس</div>
+      <div class="wird-card" id="wcPrayers"></div>
+      <div class="slbl">ورد المساء — بعد العصر</div>
+      <div class="wird-card" id="wcEvening"></div>
+    </div>
+
+    <!-- ── WEEK ── -->
+    <div class="page" id="page-week">
+      <div class="slbl">المحاضرات الأسبوعية</div>
+      <div class="week-wrap"><table class="week-tbl" id="weekTbl"></table></div>
+      <div class="slbl" style="margin-top:22px">روتين ثابت كل يوم</div>
+      <div id="routineList"></div>
+    </div>
+
+    <!-- ── PROGRESS ── -->
+    <div class="page" id="page-prog">
+      <div class="ring-wrap">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center">
+          <svg class="ring-svg" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#c8a84b"/>
+                <stop offset="100%" stop-color="#f4dda0"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="50" cy="50" r="45"/>
+            <circle class="ring-el" id="ringEl" cx="50" cy="50" r="45" stroke-dashoffset="283"/>
+          </svg>
+          <div class="ring-pct" id="ringPct">0%</div>
+        </div>
+        <div class="ring-msg" id="ringMsg">ابدأ يومك باسم الله 🌙</div>
+      </div>
+      <div class="slbl">سجل آخر ٧ أيام</div>
+      <div class="streak-row" id="streakRow"></div>
+      <div class="slbl">إحصائيات</div>
+      <div class="stats" style="margin-bottom:0">
+        <div class="stat"><div class="stat-n" id="wkT" style="color:var(--gold2)">—</div><div class="stat-l">مهمة منجزة</div></div>
+        <div class="stat"><div class="stat-n" id="wkS" style="color:var(--em)">—</div><div class="stat-l">أيام 🔥</div></div>
+        <div class="stat"><div class="stat-n" id="wkA" style="color:var(--sap)">—</div><div class="stat-l">متوسط %</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ POMODORO OVERLAY ══ -->
+<div class="pomo-overlay" id="pomoOverlay">
+  <div class="pomo-box">
+    <div style="font-size:.75rem;font-weight:700;color:var(--t2);margin-bottom:10px">⏱️ وضع التركيز</div>
+    <div class="pomo-task-name" id="pomoTaskName">...</div>
+    <div class="pomo-ring">
+      <svg class="pomo-svg" viewBox="0 0 170 170">
+        <defs>
+          <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#c8a84b"/>
+            <stop offset="100%" stop-color="#f4dda0"/>
+          </linearGradient>
+        </defs>
+        <circle class="pomo-track" cx="85" cy="85" r="80"/>
+        <circle class="pomo-fill" id="pomoFill" cx="85" cy="85" r="80"/>
+      </svg>
+      <div class="pomo-time" id="pomoTime">25:00</div>
+    </div>
+    <div class="pomo-lbl" id="pomoLbl">اضغط ابدأ للتركيز ٢٥ دقيقة</div>
+    <div class="pomo-btns">
+      <button class="pomo-btn start" id="pomoBtnStart" onclick="pomoToggle()">▶ ابدأ</button>
+      <button class="pomo-btn stop"  onclick="pomoClose()">✕ إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ EDIT NAME MODAL ══ -->
+<div class="pomo-overlay" id="editNameOverlay">
+  <div class="pomo-box" style="text-align:right">
+    <div style="font-size:1.1rem;font-weight:800;color:var(--gold2);margin-bottom:12px">✏️ تعديل اسمك</div>
+    <label class="field-lbl">اسمك الكريم</label>
+    <input class="field-inp" id="editNameInp" placeholder="اسمك..."/>
+    <div class="gender-row">
+      <button class="g-btn" id="enGM" onclick="setEditG('m')">👦 ولد</button>
+      <button class="g-btn" id="enGF" onclick="setEditG('f')">👧 بنت</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn-main" onclick="saveEditName()" style="flex:1">حفظ</button>
+      <button class="pomo-btn" onclick="closeEditName()" style="flex:1">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════
+   CONSTANTS
+══════════════════════════════ */
+const DAYS_AR   = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const DAYS_SH   = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+
+const MOTIVATIONS = {
+  // keyed by progress bracket 0-9 (0=0%, 1=10-19%, …)
+  0:[
+    {i:'🌙',t:'بسم الله نبدأ يومنا.',s:'«وَقُلِ اعْمَلُوا فَسَيَرَى اللَّهُ عَمَلَكُمْ»'},
+    {i:'🌅',t:'الفجر طلع — والوقت أمانة.',s:'كل دقيقة تستثمرها هي صدقة على نفسك'},
+    {i:'📿',t:'ابدأ بالبسملة وستجد بركة في كل شيء.',s:'النية الصالحة تجعل العمل العادي عبادة'},
+  ],
+  2:[
+    {i:'🌱',t:'خير الأعمال أدومها وإن قلّ.',s:'لا تستهن بما بدأت — الخطوة الأولى أصعب'},
+    {i:'🚶',t:'رحلة الألف ميل تبدأ بخطوة.',s:'أنت على الطريق الصح، استمر'},
+    {i:'💡',t:'لقد بدأت، وهذا أهم من الاكتمال.',s:'المبادرة هي نصف الإنجاز'},
+  ],
+  4:[
+    {i:'⚡',t:'نص الطريق قطعته — لا ترجع.',s:'«وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا»'},
+    {i:'🔥',t:'الزخم معك دلوقتي، واصل.',s:'الشخص المنتج لا يتوقف عند المنتصف'},
+    {i:'💪',t:'ماشي كويس جداً.',s:'لك درجة عند الله بكل مهمة أكملتها'},
+  ],
+  6:[
+    {i:'🌟',t:'بقيت القليل — الجزء الأصعب خلّصته.',s:'«إِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ»'},
+    {i:'🏅',t:'في المستقيمة الأخيرة — ركّز.',s:'التعب اللي حاسسه ده دليل إنك اجتهدت'},
+    {i:'✨',t:'كاد المنجز يطير فرحاً.',s:'أكمل وخلّيها 100%'},
+  ],
+  8:[
+    {i:'🏆',t:'يوم مكتمل — ما شاء الله عليك!',s:'«وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ»'},
+    {i:'🎯',t:'أحسنت — يوم استثمرته بشكل صح.',s:'بكره هتشكر نفسك على إنك أكملت النهارده'},
+    {i:'🌙',t:'انتهى يومك على خير — بارك الله فيك.',s:'النوم المبكر أجره عند الله على النية الصالحة'},
+  ],
+};
+
+// Random from specific bucket
+const RAND_MOT = (pct) => {
+  const keys = [0,2,4,6,8];
+  let bucket = 0;
+  for(const k of keys){ if(pct >= k*10) bucket=k; }
+  const arr = MOTIVATIONS[bucket];
+  return arr[Math.floor(Math.random()*arr.length)];
+};
+
+// Post-completion random toasts
+const DONE_TOASTS = [
+  '✅ أحسنت!','💪 واصل كده!','🌟 ما شاء الله!','🔥 رائع!',
+  '✨ بارك الله فيك!','⭐ ممتاز!','🏅 انجاز!','🤲 اللهم بارك!',
+  '💎 استمر!','🚀 في المسار الصح!',
+];
+
+const AYAHS = [
+  {ar:'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا',src:'الشرح — ٥، ٦'},
+  {ar:'وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا ۝ وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ',src:'الطلاق — ٢، ٣'},
+  {ar:'إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ',src:'الرعد — ١١'},
+  {ar:'وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ',src:'النجم — ٣٩'},
+  {ar:'وَقُلِ اعْمَلُوا فَسَيَرَى اللَّهُ عَمَلَكُمْ وَرَسُولُهُ وَالْمُؤْمِنُونَ',src:'التوبة — ١٠٥'},
+  {ar:'يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ',src:'المجادلة — ١١'},
+  {ar:'رَبِّ زِدْنِي عِلْمًا',src:'طه — ١١٤'},
+  {ar:'وَعَسَىٰ أَن تَكْرَهُوا شَيْئًا وَهُوَ خَيْرٌ لَّكُمْ',src:'البقرة — ٢١٦'},
+  {ar:'وَتَزَوَّدُوا فَإِنَّ خَيْرَ الزَّادِ التَّقْوَىٰ',src:'البقرة — ١٩٧'},
+  {ar:'اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ',src:'العلق — ١'},
+];
+
+const WIRD_FAJR = [
+  {id:'wf1',t:'أذكار الصباح',c:'كاملة'},
+  {id:'wf2',t:'قراءة القرآن',c:'وِرد يومي'},
+  {id:'wf3',t:'الاستغفار',c:'١٠٠ مرة'},
+  {id:'wf4',t:'الصلاة على النبي ﷺ',c:'١٠٠ مرة'},
+  {id:'wf5',t:'سبحان الله',c:'٣٣ مرة'},
+  {id:'wf6',t:'الحمد لله',c:'٣٣ مرة'},
+  {id:'wf7',t:'الله أكبر',c:'٣٤ مرة'},
+  {id:'wf8',t:'آية الكرسي',c:'مرة'},
+];
+const WIRD_PRAYERS = [
+  {id:'wp1',t:'🕌 الفجر',c:'٢ سنة + ٢ فرض'},
+  {id:'wp2',t:'🕌 الظهر',c:'٤ س + ٤ ف + ٢ س'},
+  {id:'wp3',t:'🕌 العصر',c:'٤ فرض'},
+  {id:'wp4',t:'🕌 المغرب',c:'٣ ف + ٢ سنة'},
+  {id:'wp5',t:'🕌 العشاء',c:'٤ ف + ٢ س + وتر'},
+];
+const WIRD_EVENING = [
+  {id:'we1',t:'أذكار المساء',c:'كاملة'},
+  {id:'we2',t:'سورة الكهف',c:'الجمعة'},
+  {id:'we3',t:'الصلاة على النبي ﷺ',c:'١٠٠ مرة'},
+  {id:'we4',t:'المعوذتان + الإخلاص',c:'٣ مرات'},
+  {id:'we5',t:'دعاء قبل النوم',c:'الأذكار'},
+];
+
+const TAG_LBL = {tp:'صلاة',tq:'قرآن',tw:'شغل',ts:'محاضرة',tc:'كورس',tr:'مراجعة',th:'رياضة',tf:'عام'};
+const PRI_LBL = {high:'🔴 عاجل',med:'🟡 مهم',low:'🟢 عادي'};
+
+/* ══════════════════════════════
+   SUPABASE CONFIG
+══════════════════════════════ */
+const SB_URL  = 'https://faljlnmrfeewuxagxgkm.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhbGpsbm1yZmVld3V4YWd4Z2ttIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MDQ2OTksImV4cCI6MjA5MjM4MDY5OX0.DdgUx1lOO6TQPf-q4DYFIUTlVSrZ-N-mRyAb2CwCe5E';
+const SB_HDR  = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+async function sbGet(table, match){
+  const q = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${q}&limit=1`,{headers:SB_HDR});
+  const d = await r.json(); return d[0]||null;
+}
+async function sbInsert(table, body){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{...SB_HDR,'Prefer':'return=representation'},body:JSON.stringify(body)});
+  const d = await r.json(); return d[0]||null;
+}
+async function sbUpsert(table, body, onConflict){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`,{method:'POST',headers:{...SB_HDR,'Prefer':'return=representation,resolution=merge-duplicates'},body:JSON.stringify(body)});
+  return r.ok;
+}
+async function sbUpdate(table, match, body){
+  const q = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${q}`,{method:'PATCH',headers:SB_HDR,body:JSON.stringify(body)});
+  return r.ok;
+}
+
+/* ══════════════════════════════
+   AUTH
+══════════════════════════════ */
+const SESSION_KEY = 'planner_sess_v2';
+
+function hashPass(p){
+  let h=0;for(let i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0}
+  return h.toString(36);
+}
+
+function getSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY))||null }catch{return null} }
+function saveSession(u){ localStorage.setItem(SESSION_KEY,JSON.stringify(u)) }
+function clearSession(){ localStorage.removeItem(SESSION_KEY) }
+
+let _regGender='m';
+function setG(g){
+  _regGender=g;
+  document.getElementById('gM').classList.toggle('on',g==='m');
+  document.getElementById('gF').classList.toggle('on',g==='f');
+}
+
+let _loginMode='login';
+function switchLogin(m){
+  _loginMode=m;
+  document.getElementById('ltLogin').classList.toggle('on',m==='login');
+  document.getElementById('ltReg').classList.toggle('on',m==='reg');
+  document.getElementById('formLogin').style.display=m==='login'?'block':'none';
+  document.getElementById('formReg').style.display=m==='reg'?'block':'none';
+  document.getElementById('loginErr').classList.remove('on');
+}
+
+function showLoginErr(msg){
+  const el=document.getElementById('loginErr');
+  el.textContent=msg;el.classList.add('on');
+}
+
+function setBtnLoading(id, loading, label){
+  const b=document.getElementById(id); if(!b) return;
+  b.disabled=loading;
+  b.textContent=loading?'جارٍ التحميل...':label;
+}
+
+async function doLogin(){
+  const u=document.getElementById('lUser').value.trim().toLowerCase();
+  const p=document.getElementById('lPass').value;
+  if(!u||!p){ showLoginErr('اكتب اسم المستخدم وكلمة المرور'); return; }
+  setBtnLoading('btnLogin',true,'دخول ←');
+  try{
+    const user = await sbGet('users',{username:u});
+    if(!user){ showLoginErr('اسم المستخدم غير موجود — سجّل حساب جديد'); return; }
+    if(user.pass_hash!==hashPass(p)){ showLoginErr('كلمة المرور غلط، حاول تاني'); return; }
+    saveSession({username:u, name:user.name, gender:user.gender});
+    startApp(u, user.name, user.gender);
+  } catch(e){
+    showLoginErr('خطأ في الاتصال — تأكد من النت وحاول تاني');
+  } finally {
+    setBtnLoading('btnLogin',false,'دخول ←');
+  }
+}
+
+async function doRegister(){
+  const u=document.getElementById('rUser').value.trim().toLowerCase();
+  const n=document.getElementById('rName').value.trim();
+  const p=document.getElementById('rPass').value;
+  if(!u||!n||!p){ showLoginErr('اكمل كل الحقول'); return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(u)){ showLoginErr('اسم المستخدم: حروف إنجليزية وأرقام فقط (٣-٢٠ حرف)'); return; }
+  if(p.length<4){ showLoginErr('كلمة المرور على الأقل ٤ حروف'); return; }
+  setBtnLoading('btnReg',true,'إنشاء الحساب ✨');
+  try{
+    const existing = await sbGet('users',{username:u});
+    if(existing){ showLoginErr('اسم المستخدم ده موجود، جرب اسم تاني أو سجّل دخول'); return; }
+    const created = await sbInsert('users',{username:u, pass_hash:hashPass(p), name:n, gender:_regGender});
+    if(!created){ showLoginErr('حصل خطأ في إنشاء الحساب، حاول تاني'); return; }
+    saveSession({username:u, name:n, gender:_regGender});
+    startApp(u, n, _regGender);
+    toast('مرحباً يا '+n+' 🌙','gd');
+  } catch(e){
+    showLoginErr('خطأ في الاتصال — تأكد من النت وحاول تاني');
+  } finally {
+    setBtnLoading('btnReg',false,'إنشاء الحساب ✨');
+  }
+}
+
+function logout(){
+  if(!confirm('هتخرج من حسابك؟')) return;
+  clearSession(); showLogin();
+}
+
+/* ══════════════════════════════
+   APP STATE
+══════════════════════════════ */
+let CU   = null; // current username
+let S    = null; // current state
+let _saving = false;
+let _saveTimer = null;
+
+function defaultState(dow){
+  return {
+    tasks: defaultTasks(dow),
+    wird: {},
+    history: {},
+    lastReset: todayKey(),
+  };
+}
+
+async function loadState(){
+  const row = await sbGet('planner_data',{username:CU});
+  if(!row || !row.data){ S = defaultState(new Date().getDay()); return; }
+  S = {...defaultState(new Date().getDay()), ...row.data};
+}
+
+// Debounced save — waits 800ms after last change before writing to Supabase
+function saveState(){
+  // Optimistic local cache so UI feels instant
+  localStorage.setItem('planner_cache_'+CU, JSON.stringify(S));
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async ()=>{
+    try{
+      await sbUpsert('planner_data',{username:CU, data:S, updated_at:new Date().toISOString()},'username');
+    } catch(e){ /* silent — cached locally */ }
+  }, 800);
+}
+
+function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}` }
+
+/* ══════════════════════════════
+   TASKS
+══════════════════════════════ */
+function defaultTasks(dow){
+  const base=[
+    {id:'t1', n:'🌙 الاستيقاظ والوضوء',             tm:'4:00 ص',tag:'tf',pri:'low', done:false,note:''},
+    {id:'t2', n:'🕌 صلاة الفجر',                    tm:'4:10 ص',tag:'tp',pri:'high',done:false,note:''},
+    {id:'t3', n:'📖 قرآن كريم وأذكار الصباح',       tm:'4:30 ص',tag:'tq',pri:'high',done:false,note:''},
+    {id:'t4', n:'📚 مراجعة — الوقت الذهبي',         tm:'5:00 ص',tag:'tr',pri:'med', done:false,note:'الوقت الأمثل للحفظ — الذهن أصفى ما يكون'},
+    {id:'t5', n:'🌅 إفطار + تجهيز الشغل',           tm:'7:30 ص',tag:'tf',pri:'low', done:false,note:''},
+    {id:'t6', n:'💼 الشغل',                          tm:'9:00 ص',tag:'tw',pri:'high',done:false,note:'من 9 لـ 1'},
+    {id:'t7', n:'🕌 صلاة الظهر',                    tm:'1:00 م',tag:'tp',pri:'high',done:false,note:''},
+    {id:'t8', n:'🍽️ غداء + قيلولة',                 tm:'1:15 م',tag:'tf',pri:'low', done:false,note:''},
+    {id:'t9', n:'🕌 صلاة العصر',                    tm:'3:30 م',tag:'tp',pri:'high',done:false,note:''},
+    {id:'t10',n:'🏃 رياضة / مشي ٣٠ دقيقة',          tm:'3:45 م',tag:'th',pri:'med', done:false,note:''},
+    {id:'t11',n:'💻 كورس Marketing',                 tm:'4:30 م',tag:'tc',pri:'med', done:false,note:'ساعة يومياً = ٣٠ ساعة في شهر'},
+    {id:'t12',n:'🕌 صلاة المغرب',                   tm:'6:00 م',tag:'tp',pri:'high',done:false,note:''},
+    {id:'t13',n:'📖 أذكار المساء',                   tm:'6:15 م',tag:'tq',pri:'med', done:false,note:''},
+    {id:'t14',n:'🕌 صلاة العشاء',                   tm:'7:30 م',tag:'tp',pri:'high',done:false,note:''},
+    {id:'t15',n:'😴 النوم المبكر',                   tm:'11:00 م',tag:'tf',pri:'low', done:false,note:'عشان تصحى 4 ص منتعش'},
+  ];
+  const lecs={
+    1:[{id:'l1',n:'⚙️ محاضرة Back-End',    tm:'6:00 م',tag:'ts',pri:'med',done:false,note:''}],
+    2:[{id:'l2',n:'🇬🇧 محاضرة English',    tm:'6:00 م',tag:'ts',pri:'med',done:false,note:''},
+       {id:'l3',n:'📱 محاضرة Mobile App',  tm:'8:00 م',tag:'ts',pri:'med',done:false,note:''}],
+    3:[{id:'l4',n:'⚙️ محاضرة Back-End',    tm:'6:00 م',tag:'ts',pri:'med',done:false,note:''},
+       {id:'l5',n:'🤖 محاضرة AI / ML',     tm:'9:00 م',tag:'ts',pri:'med',done:false,note:''}],
+    5:[{id:'l6',n:'🤖 محاضرة AI / DS',     tm:'5:00 م',tag:'ts',pri:'med',done:false,note:''}],
+    6:[{id:'l7',n:'🇬🇧 محاضرة English',    tm:'6:00 م',tag:'ts',pri:'med',done:false,note:''},
+       {id:'l8',n:'📱 محاضرة Mobile App',  tm:'8:00 م',tag:'ts',pri:'med',done:false,note:''}],
+  };
+  const l=lecs[dow]||[];
+  const idx=base.findIndex(t=>t.id==='t14');
+  base.splice(idx+1,0,...l);
+  return base;
+}
+
+/* ══════════════════════════════
+   INIT / ROUTING
+══════════════════════════════ */
+function showLogin(){
+  document.getElementById('scApp').classList.remove('on');
+  document.getElementById('scLogin').classList.add('on');
+}
+
+function showAppLoading(show){
+  let el=document.getElementById('appLoader');
+  if(!el){
+    el=document.createElement('div');
+    el.id='appLoader';
+    el.style.cssText='position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:Tajawal,sans-serif;color:var(--t2);font-size:.9rem;font-weight:700';
+    el.innerHTML='<div style="font-size:2rem;animation:spin 1s linear infinite">⏳</div><div>جارٍ تحميل بياناتك...</div>';
+    document.body.appendChild(el);
+    const style=document.createElement('style');
+    style.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  el.style.display=show?'flex':'none';
+}
+
+async function startApp(username, name, gender){
+  CU = username;
+  showAppLoading(true);
+  // Try loading from Supabase, fallback to local cache
+  try{
+    await loadState();
+  } catch(e){
+    const cached=localStorage.getItem('planner_cache_'+CU);
+    if(cached) S=JSON.parse(cached);
+    else S=defaultState(new Date().getDay());
+  }
+  checkDayReset();
+  showAppLoading(false);
+  document.getElementById('scLogin').classList.remove('on');
+  document.getElementById('scApp').classList.add('on');
+  document.getElementById('greeting').textContent = greet(name||username, gender||'m');
+  const now=new Date();
+  document.getElementById('datePill').textContent='📅 '+DAYS_AR[now.getDay()]+'، '+now.getDate()+' '+MONTHS_AR[now.getMonth()];
+  showHeaderAyah();
+  renderAll();
+  checkPrayerReminder();
+}
+
+function checkDayReset(){
+  const k=todayKey();
+  if(S.lastReset!==k){
+    if(S.lastReset&&S.tasks&&S.tasks.length){
+      const done=S.tasks.filter(t=>t.done).length, total=S.tasks.length;
+      if(!S.history) S.history={};
+      S.history[S.lastReset]={done,total,pct:Math.round(done/total*100)};
+    }
+    const prevTasks=(S.tasks||[]).filter(t=>t.id.startsWith('c'));
+    S.tasks=defaultTasks(new Date().getDay());
+    prevTasks.forEach(t=>{ t.done=false; S.tasks.push(t); });
+    S.wird={};
+    S.lastReset=k;
+    saveState();
+  }
+}
+
+async function init(){
+  const sess=getSession();
+  if(sess&&sess.username){
+    // Verify user still exists in Supabase
+    try{
+      const user=await sbGet('users',{username:sess.username});
+      if(user){
+        startApp(sess.username, sess.name||user.name, sess.gender||user.gender);
+        return;
+      }
+    } catch(e){
+      // No network — try with cached session anyway
+      if(sess.name){
+        startApp(sess.username, sess.name, sess.gender);
+        return;
+      }
+    }
+    clearSession();
+  }
+  showLogin();
+}
+
+/* ══════════════════════════════
+   GREETING
+══════════════════════════════ */
+function greet(name,gender){
+  const h=new Date().getHours();
+  const f=gender==='f';
+  const em=f?'🌸':'✨';
+  if(h>=4&&h<6)  return `صباح النور يا ${name} ${em}`;
+  if(h<12)        return `صباح الفل يا ${name} ${em}`;
+  if(h<15)        return `نهار سعيد يا ${name} ${em}`;
+  if(h<18)        return `عصر مبارك يا ${name} ${em}`;
+  if(h<20)        return `مساء الخير يا ${name} ${em}`;
+  return `ليلة مباركة يا ${name} ${em}`;
+}
+
+/* ══════════════════════════════
+   PRAYER REMINDER
+══════════════════════════════ */
+function checkPrayerReminder(){
+  const h=new Date().getHours(),m=new Date().getMinutes();
+  const prayers=[
+    {id:'t2',name:'الفجر',start:4,end:6},
+    {id:'t7',name:'الظهر',start:13,end:15},
+    {id:'t9',name:'العصر',start:15,end:17},
+    {id:'t12',name:'المغرب',start:18,end:19},
+    {id:'t14',name:'العشاء',start:19,end:21},
+  ];
+  for(const p of prayers){
+    if(h>=p.start&&h<=p.end){
+      const task=S.tasks.find(t=>t.id===p.id);
+      if(task&&!task.done){
+        document.getElementById('prayRemindTxt').textContent=`🕌 وقت صلاة ${p.name} — هل صليت؟`;
+        document.getElementById('prayRemind').classList.add('on');
+        return;
+      }
+    }
+  }
+}
+function closePrayRemind(){ document.getElementById('prayRemind').classList.remove('on') }
+
+/* ══════════════════════════════
+   RENDER TASKS
+══════════════════════════════ */
+let _filter='all';
+function setFilter(f,btn){
+  _filter=f;
+  document.querySelectorAll('.filt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderTasks();
+}
+
+function renderTasks(){
+  const done=S.tasks.filter(t=>t.done).length, total=S.tasks.length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('sDone').textContent=done;
+  document.getElementById('sLeft').textContent=total-done;
+  document.getElementById('sPct').textContent=pct+'%';
+  document.getElementById('progPill').textContent='⏳ '+pct+'%';
+
+  // Motivation — changes based on pct
+  const mot=RAND_MOT(pct);
+  document.getElementById('motIco').textContent=mot.i;
+  document.getElementById('motTxt').textContent=mot.t;
+  document.getElementById('motSub').textContent=mot.s;
+
+  const groups=[
+    {lbl:'🕌 الصلوات والقرآن',tags:['tp','tq']},
+    {lbl:'💼 الشغل',           tags:['tw']},
+    {lbl:'🎓 المحاضرات',       tags:['ts']},
+    {lbl:'🌟 باقي اليوم',      tags:['tr','tc','th','tf']},
+  ];
+
+  // Filter
+  let filtered=S.tasks;
+  if(_filter!=='all') filtered=S.tasks.filter(t=>t.pri===_filter);
+
+  const list=document.getElementById('taskList');
+  list.innerHTML='';
+
+  if(_filter!=='all'){
+    // Flat list for filtered view
+    if(!filtered.length){
+      list.innerHTML=`<div style="text-align:center;padding:30px;color:var(--t3);font-size:.85rem">لا توجد مهام بهذه الأولوية</div>`;
+    } else {
+      filtered.forEach(t=>list.appendChild(makeCard(t)));
+    }
+    return;
+  }
+
+  groups.forEach(g=>{
+    const items=filtered.filter(t=>g.tags.includes(t.tag));
+    if(!items.length) return;
+    const lbl=document.createElement('div');
+    lbl.className='slbl';lbl.textContent=g.lbl;
+    list.appendChild(lbl);
+    items.forEach(t=>list.appendChild(makeCard(t)));
+  });
+}
+
+function makeCard(t){
+  const wrap=document.createElement('div');
+  wrap.className=`task ${t.pri||'low'} ${t.done?'done':''}`;
+  wrap.dataset.id=t.id;
+  const noteDisplay=t.note?`<div class="t-note-show">💡 ${t.note}</div>`:'';
+  wrap.innerHTML=`
+    <div class="task-top">
+      <div class="chk">${t.done?'✓':''}</div>
+      <div class="t-body">
+        <div class="t-name">${t.n}</div>
+        <div class="t-meta">
+          <span class="t-time">🕐 ${t.tm||'—'}</span>
+          <span class="t-tag ${t.tag}">${TAG_LBL[t.tag]||''}</span>
+          <span class="t-pri pri-${t.pri||'low'}">${PRI_LBL[t.pri||'low']}</span>
+        </div>
+        ${noteDisplay}
+        <div class="edit-row" id="er_${t.id}">
+          <input class="edit-inp" id="ei_${t.id}" value="${(t.n||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation()"/>
+          <button class="btn-save" onclick="saveEdit('${t.id}');event.stopPropagation()">حفظ</button>
+        </div>
+        <div class="t-note-inp-wrap" id="nw_${t.id}" style="display:none">
+          <textarea class="t-note-inp" id="ni_${t.id}" rows="2" placeholder="اكتب ملاحظتك هنا..." onclick="event.stopPropagation()">${t.note||''}</textarea>
+          <button class="btn-save" style="margin-top:4px" onclick="saveNote('${t.id}');event.stopPropagation()">حفظ الملاحظة</button>
+        </div>
+      </div>
+    </div>
+    <div class="task-actions" id="ta_${t.id}">
+      <button class="act-btn gold" onclick="toggleEdit('${t.id}',event)">✏️ تعديل</button>
+      <button class="act-btn gold" onclick="toggleNote('${t.id}',event)">📝 ملاحظة</button>
+      <button class="act-btn"      onclick="openPomo('${t.id}',event)">⏱️ تركيز</button>
+      <button class="act-btn danger" onclick="deleteTask('${t.id}',event)">🗑️</button>
+    </div>`;
+  // Click top area to toggle done
+  wrap.querySelector('.task-top').addEventListener('click',()=>toggleDone(t.id));
+  // Long press or second click reveals actions
+  wrap.addEventListener('click',e=>{
+    if(e.target.closest('.task-actions,.edit-row,.t-note-inp-wrap')) return;
+    const ta=document.getElementById('ta_'+t.id);
+    if(ta) ta.classList.toggle('on');
+  });
+  return wrap;
+}
+
+function toggleDone(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  t.done=!t.done; saveState(); renderTasks(); updateRing();
+  if(t.done){
+    const msg=DONE_TOASTS[Math.floor(Math.random()*DONE_TOASTS.length)];
+    toast(msg,'ok');
+    // Also update motivation banner with new pct
+  }
+}
+
+function toggleEdit(id,e){
+  e.stopPropagation();
+  const r=document.getElementById('er_'+id); if(!r) return;
+  r.classList.toggle('on');
+  if(r.classList.contains('on')) document.getElementById('ei_'+id).focus();
+}
+
+function saveEdit(id){
+  const v=document.getElementById('ei_'+id)?.value.trim(); if(!v) return;
+  const t=S.tasks.find(x=>x.id===id); if(t){ t.n=v; saveState(); renderTasks(); toast('تم التعديل ✓','ok'); }
+}
+
+function toggleNote(id,e){
+  e.stopPropagation();
+  const w=document.getElementById('nw_'+id); if(!w) return;
+  w.style.display=w.style.display==='none'?'block':'none';
+  if(w.style.display==='block') document.getElementById('ni_'+id).focus();
+}
+
+function saveNote(id){
+  const v=document.getElementById('ni_'+id)?.value||'';
+  const t=S.tasks.find(x=>x.id===id); if(t){ t.note=v; saveState(); renderTasks(); toast('تم حفظ الملاحظة ✓','ok'); }
+}
+
+function deleteTask(id,e){
+  e.stopPropagation();
+  if(!confirm('حذف المهمة دي؟')) return;
+  S.tasks=S.tasks.filter(x=>x.id!==id); saveState(); renderTasks();
+}
+
+/* ── ADD TASK ── */
+let _newPri='med';
+function setPri(p){
+  _newPri=p;
+  ['h','m','l'].forEach(k=>document.getElementById('pb-'+k).classList.remove('on'));
+  const map={high:'h',med:'m',low:'l'};
+  document.getElementById('pb-'+map[p]).classList.add('on');
+}
+
+function addTask(){
+  const name=document.getElementById('addName').value.trim();
+  if(!name){toast('اكتب اسم المهمة أولاً','warn');return;}
+  const time=document.getElementById('addTime').value.trim();
+  const note=document.getElementById('addNote').value.trim();
+  S.tasks.push({id:'c'+Date.now(),n:name,tm:time||'—',tag:'tf',pri:_newPri,done:false,note});
+  document.getElementById('addName').value='';
+  document.getElementById('addTime').value='';
+  document.getElementById('addNote').value='';
+  saveState(); renderTasks(); toast('تمت الإضافة ✓','ok');
+}
+
+function resetDay(){
+  if(!confirm('هتعيد كل المهام لحالتها الأصلية؟')) return;
+  S.tasks=defaultTasks(new Date().getDay()); S.wird={};
+  saveState(); renderAll(); tab('today',document.querySelector('.tab.on'));
+  toast('تم إعادة الضبط','gd');
+}
+
+/* ══════════════════════════════
+   EDIT NAME
+══════════════════════════════ */
+let _editG='m';
+function openEditName(){
+  const sess=getSession()||{};
+  document.getElementById('editNameInp').value=sess.name||CU||'';
+  _editG=sess.gender||'m';
+  document.getElementById('enGM').classList.toggle('on',_editG==='m');
+  document.getElementById('enGF').classList.toggle('on',_editG==='f');
+  document.getElementById('editNameOverlay').classList.add('on');
+}
+function closeEditName(){ document.getElementById('editNameOverlay').classList.remove('on') }
+function setEditG(g){
+  _editG=g;
+  document.getElementById('enGM').classList.toggle('on',g==='m');
+  document.getElementById('enGF').classList.toggle('on',g==='f');
+}
+async function saveEditName(){
+  const v=document.getElementById('editNameInp').value.trim(); if(!v) return;
+  try{
+    await sbUpdate('users',{username:CU},{name:v,gender:_editG});
+    // Update session cache
+    const sess=getSession();
+    if(sess){ sess.name=v; sess.gender=_editG; saveSession(sess); }
+  } catch(e){ /* silent */ }
+  document.getElementById('greeting').textContent=greet(v,_editG);
+  closeEditName(); toast('تم التحديث ✓','gd');
+}
+
+/* ══════════════════════════════
+   POMODORO
+══════════════════════════════ */
+let _pomoTimer=null, _pomoLeft=25*60, _pomoRunning=false, _pomoTaskId=null;
+const POMO_TOTAL=25*60;
+
+function openPomo(taskId,e){
+  e.stopPropagation();
+  const t=S.tasks.find(x=>x.id===taskId); if(!t) return;
+  _pomoTaskId=taskId;
+  _pomoLeft=POMO_TOTAL; _pomoRunning=false;
+  clearInterval(_pomoTimer);
+  document.getElementById('pomoTaskName').textContent=t.n;
+  document.getElementById('pomoTime').textContent='25:00';
+  document.getElementById('pomoLbl').textContent='اضغط ابدأ للتركيز ٢٥ دقيقة';
+  document.getElementById('pomoBtnStart').textContent='▶ ابدأ';
+  document.getElementById('pomoFill').style.strokeDashoffset='0';
+  document.getElementById('pomoOverlay').classList.add('on');
+}
+
+function pomoToggle(){
+  if(_pomoRunning){ clearInterval(_pomoTimer); _pomoRunning=false;
+    document.getElementById('pomoBtnStart').textContent='▶ استمر';
+  } else {
+    _pomoRunning=true;
+    document.getElementById('pomoBtnStart').textContent='⏸ إيقاف';
+    _pomoTimer=setInterval(()=>{
+      _pomoLeft--;
+      const m=Math.floor(_pomoLeft/60), s=_pomoLeft%60;
+      document.getElementById('pomoTime').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      const prog=1-(_pomoLeft/POMO_TOTAL);
+      document.getElementById('pomoFill').style.strokeDashoffset=String(502*(1-prog));
+      document.getElementById('pomoLbl').textContent=`${m} دقيقة و${s} ثانية متبقية`;
+      if(_pomoLeft<=0){
+        clearInterval(_pomoTimer); _pomoRunning=false;
+        document.getElementById('pomoBtnStart').textContent='✓ انتهى!';
+        document.getElementById('pomoLbl').textContent='أحسنت! ٢٥ دقيقة تركيز كاملة 🏆';
+        toast('جلسة تركيز منتهية! ٢٥ دقيقة ✨','gd');
+      }
+    },1000);
+  }
+}
+
+function pomoClose(){ clearInterval(_pomoTimer); _pomoRunning=false; document.getElementById('pomoOverlay').classList.remove('on') }
+
+/* ══════════════════════════════
+   WIRD
+══════════════════════════════ */
+let _ayahIdx=0;
+function nextAyah(){
+  _ayahIdx=(_ayahIdx+1)%AYAHS.length;
+  renderAyah();
+}
+function renderAyah(){
+  const a=AYAHS[_ayahIdx];
+  document.getElementById('ayahTxt').textContent=a.ar;
+  document.getElementById('ayahSrc').textContent=a.src;
+}
+
+function renderWird(){
+  renderAyah();
+  renderWirdSec('wcFajr',  WIRD_FAJR,   'fajr');
+  renderWirdSec('wcPrayers',WIRD_PRAYERS,'prayers');
+  renderWirdSec('wcEvening',WIRD_EVENING,'evening');
+}
+
+function renderWirdSec(elId,items,key){
+  if(!S.wird) S.wird={};
+  if(!S.wird[key]) S.wird[key]={};
+  const done=items.filter(i=>S.wird[key][i.id]).length, total=items.length;
+  const pct=total?Math.round(done/total*100):0;
+  const titles={fajr:'ورد الصباح',prayers:'الصلوات الخمس',evening:'ورد المساء'};
+  const el=document.getElementById(elId); if(!el) return;
+  el.innerHTML=`
+    <div class="wird-hdr">
+      <div class="wird-ttl">📿 ${titles[key]}</div>
+      <div class="wird-pct">${done}/${total}</div>
+    </div>
+    <div class="wird-bar"><div class="wird-fill" style="width:${pct}%"></div></div>
+    <div class="wird-grid">
+      ${items.map(i=>`
+        <div class="wird-item ${S.wird[key][i.id]?'done':''}" onclick="toggleWird('${key}','${i.id}')">
+          <div class="wird-chk">${S.wird[key][i.id]?'✓':''}</div>
+          <div class="wird-txt">${i.t}</div>
+          <div class="wird-cnt">${i.c}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function toggleWird(key,id){
+  if(!S.wird[key]) S.wird[key]={};
+  S.wird[key][id]=!S.wird[key][id]; saveState(); renderWird();
+  if(S.wird[key][id]) toast('بارك الله فيك 🤲','gd');
+}
+
+/* ══════════════════════════════
+   WEEK TABLE
+══════════════════════════════ */
+function showHeaderAyah(){
+  const a=AYAHS[new Date().getDate()%AYAHS.length];
+  document.getElementById('hdrAyah').innerHTML=a.ar+'<span>'+a.src+'</span>';
+}
+
+function renderWeek(){
+  const today=new Date().getDay();
+  const dispOrder=[6,0,1,2,3,4,5];
+  const hdrs=['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
+  const todayDisp=dispOrder.indexOf(today);
+  const rows=[
+    {tm:'5:00 ص',cells:[{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'قرآن🌅',c:'wp'}]},
+    {tm:'9:00 ص',cells:[{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'شغل💼',c:'ww'},{t:'حر',c:'wf'}]},
+    {tm:'4:30 م',cells:[{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'Marketing',c:'ws'},{t:'AI/ML 5م',c:'wai'}]},
+    {tm:'6:00 م',cells:[{t:'English🇬🇧',c:'we'},{t:'—',c:'wf'},{t:'BackEnd⚙️',c:'wb'},{t:'English🇬🇧',c:'we'},{t:'BackEnd⚙️',c:'wb'},{t:'—',c:'wf'},{t:'عائلة🏠',c:'wf'}]},
+    {tm:'8:00 م',cells:[{t:'Mobile📱',c:'wm'},{t:'مراجعة',c:'wr'},{t:'مراجعة',c:'wr'},{t:'Mobile📱',c:'wm'},{t:'AI/DS🤖',c:'wai'},{t:'مراجعة',c:'wr'},{t:'وقت حر',c:'wf'}]},
+  ];
+  let h='<thead><tr><th>الوقت</th>';
+  hdrs.forEach((d,i)=>{ h+=`<th class="${i===todayDisp?'td':''}">${d}${i===todayDisp?' 📍':''}</th>`; });
+  h+='</tr></thead><tbody>';
+  rows.forEach(r=>{
+    h+=`<tr><td style="font-size:.68rem;font-weight:800;color:var(--t2);white-space:nowrap;padding:8px 10px">${r.tm}</td>`;
+    r.cells.forEach((c,i)=>{ h+=`<td ${i===todayDisp?'class="td"':''}><div class="wc ${c.c}">${c.t}</div></td>`; });
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  document.getElementById('weekTbl').innerHTML=h;
+
+  const routine=[
+    {tm:'4:00 ص',n:'الاستيقاظ والوضوء'},{tm:'4:10 ص',n:'صلاة الفجر 🕌'},
+    {tm:'4:30 ص',n:'قرآن كريم وأذكار 📖'},{tm:'5:00 ص',n:'مراجعة — الوقت الذهبي 📚'},
+    {tm:'1:00 م',n:'صلاة الظهر 🕌'},{tm:'3:30 م',n:'صلاة العصر 🕌'},
+    {tm:'3:45 م',n:'رياضة / مشي 🏃'},{tm:'6:00 م',n:'صلاة المغرب 🕌'},
+    {tm:'7:30 م',n:'صلاة العشاء 🕌'},{tm:'11:00 م',n:'النوم المبكر 😴'},
+  ];
+  document.getElementById('routineList').innerHTML=routine.map(r=>`
+    <div style="display:flex;gap:12px;align-items:center;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rsm);padding:10px 15px;margin-bottom:6px">
+      <span style="font-size:.7rem;font-weight:800;color:var(--sap);min-width:52px">${r.tm}</span>
+      <span style="font-size:.84rem;font-weight:600">${r.n}</span>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════
+   PROGRESS
+══════════════════════════════ */
+function updateRing(){
+  const done=S.tasks.filter(t=>t.done).length, total=S.tasks.length;
+  const pct=total?Math.round(done/total*100):0;
+  const r=document.getElementById('ringEl');
+  if(r) r.style.strokeDashoffset=String(283-(pct/100*283));
+  const rp=document.getElementById('ringPct');
+  if(rp) rp.textContent=pct+'%';
+  const msgs=[[0,'ابدأ يومك باسم الله 🌙'],[25,'برافو! استمر 💪'],[50,'نص الطريق! واصل 🌟'],[75,'قريب جداً 🔥'],[100,'يوم مكتمل! ما شاء الله 🏆']];
+  let msg=msgs[0][1];
+  msgs.forEach(([t,m])=>{ if(pct>=t) msg=m });
+  const rm=document.getElementById('ringMsg');
+  if(rm) rm.textContent=msg;
+}
+
+function renderStreak(){
+  const today=new Date(); let h='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(today); d.setDate(d.getDate()-i);
+    const k=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    const isToday=i===0, hist=S.history?S.history[k]:null;
+    const ok=hist&&hist.pct>=70;
+    h+=`<div class="s-day ${ok?'ok':''} ${isToday?'today':''}">
+      <span>${isToday?'📍':ok?'✓':'○'}</span>
+      <span>${DAYS_SH[d.getDay()]}</span>
+      <span style="font-size:.55rem">${hist?hist.pct+'%':isToday?'—':'—'}</span>
+    </div>`;
+  }
+  const el=document.getElementById('streakRow'); if(el) el.innerHTML=h;
+  const hv=Object.values(S.history||{}).slice(-7);
+  const td=hv.reduce((s,h)=>s+(h.done||0),0);
+  let streak=0;
+  for(let i=hv.length-1;i>=0;i--){ if(hv[i].pct>=70) streak++; else break; }
+  const avg=hv.length?Math.round(hv.reduce((s,h)=>s+(h.pct||0),0)/hv.length):0;
+  ['wkT','wkS','wkA'].forEach((id,i)=>{
+    const el=document.getElementById(id); if(el) el.textContent=[td,streak+' 🔥',avg+'%'][i];
+  });
+}
+
+/* ══════════════════════════════
+   TABS
+══════════════════════════════ */
+function tab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('page-'+id).classList.add('on');
+  if(id==='prog'){ updateRing(); renderStreak(); }
+  if(id==='wird'){ renderWird(); }
+}
+
+/* ══════════════════════════════
+   RENDER ALL
+══════════════════════════════ */
+function renderAll(){ renderTasks(); renderWird(); renderWeek(); updateRing(); }
+
+/* ══════════════════════════════
+   TOAST
+══════════════════════════════ */
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+(type||'');
+  clearTimeout(t._t); t._t=setTimeout(()=>{t.className='toast'},2800);
+}
+
+/* ══════════════════════════════
+   EVENTS
+══════════════════════════════ */
+document.addEventListener('DOMContentLoaded',init);
+document.getElementById('lPass')?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin() });
+document.getElementById('rPass')?.addEventListener('keydown',e=>{ if(e.key==='Enter') doRegister() });
+document.getElementById('addName')?.addEventListener('keydown',e=>{ if(e.key==='Enter') addTask() });
+</script>
+</body>
+</html>
