@@ -366,14 +366,8 @@ async function startApp(username, name, gender){
   document.getElementById('scLogin').classList.remove('on');
   document.getElementById('scApp').classList.add('on');
   document.getElementById('greeting').textContent = greet(name||username, gender||'m');
-  const now=new Date();
+  updateDatePill();
   const datePillEl = document.getElementById('datePill');
-  let gregStr = '📅 '+DAYS_AR[now.getDay()]+'، '+now.getDate()+' '+MONTHS_AR[now.getMonth()];
-  try{
-    const hFmt = new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{day:'numeric',month:'long'});
-    gregStr += ' | 🌙 '+hFmt.format(now);
-  } catch{}
-  datePillEl.textContent = gregStr;
   datePillEl.classList.add('clickable');
   datePillEl.title = 'فتح التقويم';
   datePillEl.onclick = goToCalendar;
@@ -400,6 +394,7 @@ async function startApp(username, name, gender){
 }
 
 function checkDayReset(){
+  if(!S) return false;
   const k=todayKey();
   if(S.lastReset!==k){
     if(S.lastReset&&S.tasks&&S.tasks.length){
@@ -414,7 +409,21 @@ function checkDayReset(){
     S.lastReset=k;
     saveState();
     syncWeekScheduleToTasks();
+    return true;
   }
+  return false;
+}
+
+function updateDatePill(){
+  const now=new Date();
+  const datePillEl = document.getElementById('datePill');
+  if(!datePillEl) return;
+  let gregStr = '📅 '+DAYS_AR[now.getDay()]+'، '+now.getDate()+' '+MONTHS_AR[now.getMonth()];
+  try{
+    const hFmt = new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{day:'numeric',month:'long'});
+    gregStr += ' | 🌙 '+hFmt.format(now);
+  } catch{}
+  datePillEl.textContent = gregStr;
 }
 
 /* ── Weekly schedule → auto-sync to today's tasks ── */
@@ -567,6 +576,14 @@ function checkTaskReminders(){
 setInterval(checkPrayerReminder, 5*60*1000);
 setInterval(checkFastingReminder, 60*1000);
 setInterval(checkTaskReminders, 60*1000);
+setInterval(() => {
+  if (S) {
+    if (checkDayReset()) {
+      renderAll();
+    }
+    updateDatePill();
+  }
+}, 60*1000);
 
 /* ══════════════════════════════
    RENDER TASKS
